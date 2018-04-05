@@ -4,6 +4,9 @@ A [GenIce](https://github.com/vitroid/GenIce) plugin to illustrate the structure
 
 ## Requirements
 
+    % make prepare
+will install required packages via pip.
+
 * [GenIce](https://github.com/vitroid/GenIce) >=0.16.
 * svgwrite.
 

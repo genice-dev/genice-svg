@@ -9,7 +9,7 @@ endif
 test: CS2.svg
 %.svg: formats/svg_poly.py Makefile
 	genice $*     -f svg_poly > $@
-prepare: #might require root privilege.
+prepare: # might require root privilege.
 	pip install genice svgwrite
 install:
 	install -d $(DEST)
