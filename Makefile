@@ -16,5 +16,5 @@ install:
 	install -d $(DEST)/formats
 	install formats/*py $(DEST)/formats
 clean:
-	-rm $(ALL) *~ */*~
+	-rm $(ALL) *~ */*~ *svg
 	-rm -rf */__pycache__
