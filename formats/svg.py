@@ -11,6 +11,30 @@ from math import sin,cos
 import svgwrite as sw
 
 
+def draw_cell(prims, cellmat):
+    for a in (0., 1.):
+        for b in (0., 1.):
+            v0 = np.array([0., a, b])
+            v1 = np.array([1., a, b])
+            mid = (v0+v1)/2
+            prims.append((np.dot(mid, cellmat),
+                          np.dot(v0,  cellmat),
+                          np.dot(v1,  cellmat)))
+            v0 = np.array([b, 0., a])
+            v1 = np.array([b, 1., a])
+            mid = (v0+v1)/2
+            prims.append((np.dot(mid, cellmat),
+                          np.dot(v0,  cellmat),
+                          np.dot(v1,  cellmat)))
+            v0 = np.array([a, b, 0.])
+            v1 = np.array([a, b, 1.])
+            mid = (v0+v1)/2
+            prims.append((np.dot(mid, cellmat),
+                          np.dot(v0,  cellmat),
+                          np.dot(v1,  cellmat)))
+            
+            
+
 def hook2(lattice):
     lattice.logger.info("Hook2: A. Output molecular positions in SVG format.")
     offset = np.zeros(3)
@@ -40,6 +64,7 @@ def hook2(lattice):
     pos = lattice.reppositions
     prims = []
     R = 0.025
+    draw_cell(prims, cellmat)
     for i,j in lattice.graph.edges():
         vi = pos[i]
         d  = pos[j] - pos[i]
