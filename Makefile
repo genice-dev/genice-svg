@@ -6,4 +6,6 @@ install:
 	./setup.py install
 clean:
 	-rm $(ALL) *~ */*~ *svg
-	-rm -rf __pycache__ build dist *.egg-info
+	-rm -rf build dist *.egg-info
+	-find . -name __pycache__ | xargs rm -rf
+

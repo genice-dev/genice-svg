@@ -10,7 +10,7 @@ import re
 #Copied from wheel package
 here = os.path.abspath(os.path.dirname(__file__))
 
-with codecs.open(os.path.join(os.path.dirname(__file__), 'svg.py'),
+with codecs.open(os.path.join(os.path.dirname(__file__), 'genice_svg', '__init__.py'),
                  encoding='utf8') as version_file:
     metadata = dict(re.findall(r"""__([a-z]+)__ = "([^"]+)""", version_file.read()))
     
@@ -31,15 +31,16 @@ setup(
     url='https://github.com/vitroid/genice-svg/',
     keywords=['genice', 'SVG'],
 
-    py_modules=['svg', 'svg_poly'],
-    # packages=['formats', ],
+    packages=['genice_svg',
+              'genice_svg.formats',
+    ],
     
     entry_points = {
         'genice_format_hook2': [
-            'svg      = svg:hook2',
+            'svg      = genice_svg.formats.svg:hook2',
         ],
         'genice_format_hook4': [
-            'svg_poly = svg_poly:hook4',
+            'svg_poly = genice_svg.formats.svg_poly:hook4',
         ]
     },
     install_requires=['svgwrite', 'numpy'],
