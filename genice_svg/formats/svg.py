@@ -72,7 +72,7 @@ def draw_cell(prims, cellmat):
             
 
 def hook2(lattice):
-    lattice.logger.info("Hook2: A. Output molecular positions in SVG format.")
+    lattice.logger.info("Hook2: A. Output molecular positions in SVG format. (Improved)")
     offset = np.zeros(3)
 
     sun = np.array([1., -10., 5.])  # right, down, front
