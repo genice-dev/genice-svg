@@ -10,4 +10,3 @@ clean:
 	-rm $(ALL) *~ */*~ *svg
 	-rm -rf build dist *.egg-info
 	-find . -name __pycache__ | xargs rm -rf
-

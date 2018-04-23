@@ -18,7 +18,7 @@ with codecs.open(os.path.join(os.path.dirname(__file__), 'genice_svg', '__init__
 setup(
     name='genice_svg',
     version=metadata['version'],
-    description='SVG format pluing for GenIce.',
+    description='SVG format plugin for GenIce.',
     #long_description=README + '\n\n' +  CHANGES,
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -43,7 +43,7 @@ setup(
             'svg_poly = genice_svg.formats.svg_poly:hook4',
         ]
     },
-    install_requires=['svgwrite', 'numpy'],
+    install_requires=['svgwrite', 'genice>=0.23'],
 
     license='MIT',
 )
