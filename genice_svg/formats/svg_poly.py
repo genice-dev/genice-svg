@@ -10,8 +10,6 @@ import svgwrite as sw
 import colorsys
 from math import sin,cos
 
-offset = np.zeros(3)
-
 sun = np.array([1., -10., 5.])  # right, down, front
 sun /= np.linalg.norm(sun)
 
@@ -67,7 +65,6 @@ def face(center, rpos, svg):
 
 
 def hook4(lattice):
-    global offset
     lattice.logger.info("Hook4: SVG (polyhedral expressions).")
     graph = nx.Graph(lattice.spacegraph) #undirected
     cellmat = lattice.repcell.mat
@@ -87,7 +84,7 @@ def hook4(lattice):
         if np.all(np.absolute(d2) < 1e-5):
             comofs = np.sum(deltas, axis=0) / len(ring)
             deltas -= comofs
-            com = lattice.reppositions[ring[0]] + comofs + offset
+            com = lattice.reppositions[ring[0]] + comofs + lattice.svg_offset
             com -= np.floor(com)
             # rel to abs
             com    = np.dot(com,    projected)
@@ -101,10 +98,14 @@ def hook4(lattice):
     lattice.logger.info("Hook4: end.")
 
 
-def argparser(arg):
-    global offset
-    assert re.match("^[-+0-9,.]+$", arg) is not None, "Argument must be three floating points separated by commas."
-    offset = np.array([float(x) for x in arg.split(",")]).reshape(3)
+def hook0(lattice, arg):
+    lattice.logger.info("Hook0: ArgParser.")
+    if arg == "":
+        lattice.svg_offset = np.zeros(3)
+    else:
+        assert re.match("^[-+0-9,.]+$", arg) is not None, "Argument must be three floating points separated by commas."
+        lattice.svg_offset = np.array([float(x) for x in arg.split(",")]).reshape(3)
+    lattice.logger.info("Hook0: end.")
         
 
-hooks = {4:hook4}
+hooks = {0:hook0, 4:hook4}

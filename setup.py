@@ -41,7 +41,10 @@ setup(
         ],
         'genice_format_hook4': [
             'svg_poly = genice_svg.formats.svg_poly:hook4',
-        ]
+        ],
+        'genice_format_hook0': [
+            'svg_poly = genice_svg.formats.svg_poly:hook0',
+        ],
     },
     install_requires=['svgwrite', 'genice>=0.23'],
 

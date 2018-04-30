@@ -95,12 +95,12 @@ def hook2(lattice):
     proj = np.dot(proj,smallrot)
     proj = np.linalg.inv(proj)
 
-    cellmat = lattice.cell.mat
+    cellmat = lattice.repcell.mat
     projected = np.dot(cellmat, proj)
     pos = lattice.reppositions
     prims = []
-    Rsphere = 0.06
-    Rcyl    = 0.03
+    Rsphere = 0.06  # nm
+    Rcyl    = 0.03  # nm
     RR      = (Rsphere**2 - Rcyl**2)**0.5
     draw_cell(prims, cellmat)
     for i,j in lattice.graph.edges():
@@ -137,13 +137,13 @@ def hook2(lattice):
             if 0 <= order < 32:
                 pal=0
                 col="#777"
-            elif 32 <= order < 48:
+            elif 32 <= order < 64:
                 pal=1
                 col="#00C"
-            elif 48<= order < 80:
+            elif 48<= order < 96:
                 pal=2
                 col="#7DD"
-            elif 80<=order<112:
+            elif 80<=order<128:
                 pal=3
                 col="#7D4"
             elif 112<=order<144:
