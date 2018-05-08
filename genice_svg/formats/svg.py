@@ -4,8 +4,6 @@ Yaplot format.
 defined in https://github.com/vitroid/Yaplot
 """
 
-__version__ = "0.1"
-
 import colorsys
 import numpy as np
 import yaplotlib as yp
