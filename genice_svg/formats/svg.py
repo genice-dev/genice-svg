@@ -7,7 +7,7 @@ defined in https://github.com/vitroid/Yaplot
 import colorsys
 import numpy as np
 import yaplotlib as yp
-from math import sin,cos, atan2,pi
+from math import sin,cos, atan2,pi, exp
 import svgwrite as sw
 
 
@@ -51,23 +51,58 @@ def draw_cell(prims, cellmat):
             v0 = np.array([0., a, b])
             v1 = np.array([1., a, b])
             mid = (v0+v1)/2
-            prims.append((np.dot(mid, cellmat),
+            prims.append([np.dot(mid, cellmat),
+                          "L",
                           np.dot(v0,  cellmat),
-                          np.dot(v1,  cellmat), 0))
+                          np.dot(v1,  cellmat), 0])
             v0 = np.array([b, 0., a])
             v1 = np.array([b, 1., a])
             mid = (v0+v1)/2
-            prims.append((np.dot(mid, cellmat),
+            prims.append([np.dot(mid, cellmat),
+                          "L",
                           np.dot(v0,  cellmat),
-                          np.dot(v1,  cellmat), 0))
+                          np.dot(v1,  cellmat), 0])
             v0 = np.array([a, b, 0.])
             v1 = np.array([a, b, 1.])
             mid = (v0+v1)/2
-            prims.append((np.dot(mid, cellmat),
+            prims.append([np.dot(mid, cellmat),
+                          "L",
                           np.dot(v0,  cellmat),
-                          np.dot(v1,  cellmat), 0))
+                          np.dot(v1,  cellmat), 0])
             
-            
+
+def Render(svg, prims, Rsphere, shadow=True):
+    shadows = []
+    if shadow:
+        for prim in prims:
+            ofs = np.array([0,0,0.2])
+            p2 = [prim[0] - ofs, prim[1]+"S", prim[2:]]
+            shadows.append(p2)
+    prims += shadows
+    for prim in sorted(prims, key=lambda x: x[0][2]):
+        if prim[1] == "L":
+            # svg.add(sw.shapes.Line(start=prim[1][:2]*200+200, end=prim[2][:2]*200+200, stroke_width=2, stroke="#444", stroke_linejoin="round", stroke_linecap="round"))
+            if prim[4] == 0:
+                svg.add(sw.shapes.Line(start=prim[2][:2]*200+200, end=prim[3][:2]*200+200, stroke_width=2, stroke="#444", stroke_linejoin="round", stroke_linecap="round"))
+            else:
+                cylinder(svg, prim[2]*200+200, prim[3]*200+200, prim[4]*200)
+        elif prim[1] == "C":
+#special coloring scheme
+#            z = prim[0][1]
+#            zr = z - 3.2
+#            zs = 1-1/(1+exp(zr*15))
+#            red = 0
+#            gre = 128+int((1-zs)*127)
+#            blu = 255
+#            col = "#{0:02x}{1:02x}{2:02x}".format(red,gre,blu)
+            col = "#0FF"
+            svg.add(sw.shapes.Circle(center=prim[0][:2]*200+200, r=Rsphere*200, stroke_width=1, stroke="#000", fill=col))
+        elif prim[1] == "CS":
+            col = "#444"
+            svg.add(sw.shapes.Circle(center=prim[0][:2]*200+200, r=Rsphere*200*1.4**3, stroke_width=0, fill=col, fill_opacity=0.15))
+            svg.add(sw.shapes.Circle(center=prim[0][:2]*200+200, r=Rsphere*200*1.4**2, stroke_width=0, fill=col, fill_opacity=0.15))
+            svg.add(sw.shapes.Circle(center=prim[0][:2]*200+200, r=Rsphere*200*1.4**1, stroke_width=0, fill=col, fill_opacity=0.15))
+        
 
 def hook2(lattice):
     lattice.logger.info("Hook2: A. Output molecular positions in SVG format. (Improved)")
@@ -109,7 +144,7 @@ def hook2(lattice):
         dp = np.dot(d, projected)
         o = dp / np.linalg.norm(dp)
         o *= RR
-        prims.append((np.dot(center,projected), np.dot(vi,projected)+o, np.dot(vi+d,projected)-o,Rcyl)) # line
+        prims.append([np.dot(center,projected), "L", np.dot(vi,projected)+o, np.dot(vi+d,projected)-o,Rcyl]) # line
         if np.linalg.norm(vi+d-pos[j]) > 0.01:
             vj = pos[j]
             d  = pos[i] - pos[j]
@@ -118,44 +153,12 @@ def hook2(lattice):
             dp = np.dot(d, projected)
             o = dp / np.linalg.norm(dp)
             o *= RR
-            prims.append((np.dot(center,projected), np.dot(vj,projected)+o, np.dot(vj+d,projected)-o,Rcyl)) # line
+            prims.append([np.dot(center,projected), "L", np.dot(vj,projected)+o, np.dot(vj+d,projected)-o,Rcyl]) # line
             
     for i,v in enumerate(pos):
-        prims.append((np.dot(v, projected),i)) #circle
+        prims.append([np.dot(v, projected),"C",i]) #circle
     svg = sw.Drawing()
-    for prim in sorted(prims, key=lambda x: x[0][2]):
-        if len(prim) == 4: #line
-            # svg.add(sw.shapes.Line(start=prim[1][:2]*200+200, end=prim[2][:2]*200+200, stroke_width=2, stroke="#444", stroke_linejoin="round", stroke_linecap="round"))
-            if prim[3] == 0:
-                svg.add(sw.shapes.Line(start=prim[1][:2]*200+200, end=prim[2][:2]*200+200, stroke_width=2, stroke="#444", stroke_linejoin="round", stroke_linecap="round"))
-            else:
-                cylinder(svg, prim[1]*200+200, prim[2]*200+200, prim[3]*200)
-        else:
-            order = prim[1]%152
-            if 0 <= order < 32:
-                pal=0
-                col="#777"
-            elif 32 <= order < 64:
-                pal=1
-                col="#00C"
-            elif 48<= order < 96:
-                pal=2
-                col="#7DD"
-            elif 80<=order<128:
-                pal=3
-                col="#7D4"
-            elif 112<=order<144:
-                pal=4
-                col="#CA2"
-            else:
-                pal=5
-                col="#B00"
-            hue = pal/6. # ((5**0.5-1)/2*pal)%1
-            sat = 1
-            bri = 1
-            r,g,b = colorsys.hsv_to_rgb(hue, sat, bri)
-            rgb = "#{0:x}{1:x}{2:x}".format(int(r*15.9), int(g*15.9), int(b*15.9))
-            svg.add(sw.shapes.Circle(center=prim[0][:2]*200+200, r=Rsphere*200, stroke_width=1, stroke="#000", fill=col))
+    Render(svg, prims, Rsphere)
     print(svg.tostring())
     lattice.logger.info("Hook2: end.")
 
@@ -171,3 +174,28 @@ if __name__ == "__main__":
 
 hooks = {2:hook2}
 
+
+#special coloring scheme for ice T2
+#        else: 
+#            order = prim[1]%152 
+#            if 0 <= order < 32: 
+#                pal=0 
+#                col="#777" 
+#            elif 32 <= order < 64: 
+#                pal=1 
+#                col="#00C" 
+#            elif 48<= order < 96: 
+#                pal=2 
+#                col="#7DD" 
+#            elif 80<=order<128: 
+#                pal=3 
+#                col="#7D4" 
+#            elif 112<=order<144: 
+#                pal=4 
+#                col="#CA2" 
+#            else: 
+#                pal=5 
+#                col="#B00" 
+#            hue = pal/6. # ((5**0.5-1)/2*pal)%1 
+#            sat = 1 
+#            bri = 1 
