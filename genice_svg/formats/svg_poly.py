@@ -64,9 +64,9 @@ def face(center, rpos, svg):
     return group
 
 
-def hook4(lattice):
-    lattice.logger.info("Hook4: SVG (polyhedral expressions).")
-    graph = nx.Graph(lattice.spacegraph) #undirected
+def hook2(lattice):
+    lattice.logger.info("Hook2: SVG (polyhedral expressions).")
+    graph = nx.Graph(lattice.graph) #undirected
     cellmat = lattice.repcell.mat
     projected = np.dot(cellmat, proj)
     queue = []
@@ -95,7 +95,7 @@ def hook4(lattice):
     for com, deltas in sorted(queue, key=lambda x: x[0][2]): #key is z of com
         svg.add(face(com, deltas, svg))
     print(svg.tostring())
-    lattice.logger.info("Hook4: end.")
+    lattice.logger.info("Hook2: end.")
 
 
 def hook0(lattice, arg):
@@ -108,4 +108,4 @@ def hook0(lattice, arg):
     lattice.logger.info("Hook0: end.")
         
 
-hooks = {0:hook0, 4:hook4}
+hooks = {0:hook0, 2:hook2}

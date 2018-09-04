@@ -11,7 +11,26 @@ from math import sin,cos, atan2,pi, exp
 import svgwrite as sw
 
 
-def cylinder(svg, v1_, v2_, r, fill="#fff"):
+def cylinder_path(R, ratio, L, **kwargs):
+    # horizontal, start from origin
+    magic = 0.552284749831
+    x1 = R*ratio
+    x2 = x1*magic
+    y1 = R
+    y2 = y1*magic
+    p = []
+    p.append(["M", 0, -y1])
+    p.append(["L", L, -y1])
+    p.append(["C", L+x2,-y1, L+x1, -y2,  L+x1, 0])
+    p.append(["C", L+x1, y2, L+x2,  y1,  L,   y1])
+    p.append(["L", 0, y1])
+    p.append(["C",-x2, y1,-x1, y2,  -x1,0])
+    p.append(["C",-x1,-y2,-x2,-y1, 0,-y1])
+    p.append(["Z"])
+    return sw.path.Path(d=p, **kwargs)
+
+
+def cylinder_new(svg, v1_, v2_, r, fill="#fff", endfill="#fff"):
     """
     draw a 3D cylinder
     """
@@ -22,26 +41,18 @@ def cylinder(svg, v1_, v2_, r, fill="#fff"):
         v1, v2 = v1_, v2_
     dir = v2[:2] - v1[:2]
     angle = atan2(dir[1],dir[0])
-    # e   = dir / np.linalg.norm(dir)
-    # ee  = np.array([e[1], -e[0]])
     d   = v2 - v1
     ratio = d[2] / np.linalg.norm(d)
-    u = sw.shapes.Ellipse(center=v1[:2], r=(ratio*r, r), stroke_width=1, stroke="#000", fill=fill)
-    u.rotate(angle*180/pi, center=v1[:2])
-    group.add(u)
-    u = sw.shapes.Rect((v1[0],v1[1]-r), (np.linalg.norm(dir), 2*r), stroke_width=0, stroke="#000", fill=fill)
-    u.rotate(angle*180/pi, center=v1[:2])
-    group.add(u)
-    u = sw.shapes.Ellipse(center=v2[:2], r=(ratio*r, r), stroke_width=1, stroke="#000", fill="#ddd")
+    L = np.linalg.norm(dir)
+    path = cylinder_path(r, ratio, L, stroke_width=1, stroke="#000", fill=fill)
+    path.translate(v1[0],v1[1])
+    path.rotate(angle*180/pi, center=(0,0))
+    group.add(path)
+    u = sw.shapes.Ellipse(center=v2[:2], r=(ratio*r, r),
+                          stroke_width=1, stroke="#000", fill=endfill)
     u.rotate(angle*180/pi, center=v2[:2])
     group.add(u)
-    u = sw.shapes.Line((v1[0],v1[1]-r), (v1[0]+np.linalg.norm(dir), v1[1]-r), stroke_width=1, stroke="#000")
-    u.rotate(angle*180/pi, center=v1[:2])
-    group.add(u)
-    u = sw.shapes.Line((v1[0],v1[1]+r), (v1[0]+np.linalg.norm(dir), v1[1]+r), stroke_width=1, stroke="#000")
-    u.rotate(angle*180/pi, center=v1[:2])
-    group.add(u)
-    
+                
     
 
 
@@ -85,7 +96,7 @@ def Render(svg, prims, Rsphere, shadow=True):
             if prim[4] == 0:
                 svg.add(sw.shapes.Line(start=prim[2][:2]*200+200, end=prim[3][:2]*200+200, stroke_width=2, stroke="#444", stroke_linejoin="round", stroke_linecap="round"))
             else:
-                cylinder(svg, prim[2]*200+200, prim[3]*200+200, prim[4]*200)
+                cylinder_new(svg, prim[2]*200+200, prim[3]*200+200, prim[4]*200, endfill="#ddd")
         elif prim[1] == "C":
 #special coloring scheme
 #            z = prim[0][1]
@@ -166,7 +177,7 @@ def hook2(lattice):
 def main():
     #print(atan2(sin(3),cos(3)))
     svg = sw.Drawing()
-    cylinder(svg, np.array((20.,20.,20.)),np.array((100.,20.,100.)),15.)
+    cylinder_new(svg, np.array((20.,20.,20.)),np.array((100.,20.,100.)),15.)
     print(svg.tostring())
     
 if __name__ == "__main__":
