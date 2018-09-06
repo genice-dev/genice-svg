@@ -39,8 +39,6 @@ setup(
     entry_points = {
         'genice_format_hook2': [
             'svg      = genice_svg.formats.svg:hook2',
-        ],
-        'genice_format_hook2': [
             'svg_poly = genice_svg.formats.svg_poly:hook2',
         ],
         'genice_format_hook0': [
