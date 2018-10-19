@@ -152,7 +152,7 @@ def hook2(lattice):
     for i,v in enumerate(pos):
         prims.append([np.dot(v, projected),"C",i]) #circle
     svg = sw.Drawing(size=("{0}px".format(200*(xmax-xmin)), "{0}px".format(200*(ymax-ymin))))
-    Render(svg, prims, Rsphere, shadow=False, topleft=np.array((xmin,ymin)))
+    Render(svg, prims, Rsphere, shadow=lattice.shadow, topleft=np.array((xmin,ymin)))
     print(svg.tostring())
     print("<!-- EndOfFrame -->")
     lattice.logger.info("Hook2: end.")
@@ -161,14 +161,31 @@ def hook2(lattice):
 
 
 # argparser
+
+#New standard style of options for the plugins:
+#svg2[rotmat=[]:other=True:...]
+
 def hook0(lattice, arg):
     lattice.logger.info("Hook0: ArgParser.")
+    lattice.shadow = False
     if arg == "":
         #This is default.  No reshaping applied.
         lattice.proj = np.array([[1., 0, 0], [0, 1, 0], [0, 0, 1]])
     else:
-        assert re.match("^[-+0-9,]+$", arg) is not None, "Argument must be nine floating point numbers separated by commas."
-        lattice.proj = np.array([float(x) for x in arg.split(",")]).reshape(3,3)
+        args = arg.split(":")
+        for a in args:
+            if a.find("=") >= 0:
+                key, value = a.split("=")
+                lattice.logger.info("Option with arguments: {0} := {1}".format(key,value))
+                if key == "rotmat":
+                    value = re.search(r"\[([-0-9,.]+)\]", value).group(1)
+                    lattice.proj = np.array([float(x) for x in value.split(",")]).reshape(3,3)
+            else:
+                lattice.logger.info("Flags: {0}".format(a))
+                if a == "shadow":
+                    lattice.shadow = True
+                else:
+                    assert False, "Wrong options."
     lattice.logger.info("Hook0: end.")
 
 
