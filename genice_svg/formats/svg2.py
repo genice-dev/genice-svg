@@ -8,6 +8,7 @@ import numpy as np
 import yaplotlib as yp
 from math import sin,cos, atan2,pi, exp
 import svgwrite as sw
+import re
 
 
 def cylinder(svg, v1_, v2_, r, fill="#fff"):
@@ -68,9 +69,18 @@ def draw_cell(prims, cellmat):
                           "L",
                           np.dot(v0,  cellmat),
                           np.dot(v1,  cellmat), 0])
+    corners = []
+    for x in (np.zeros(3), cellmat[0]):
+        for y in (np.zeros(3), cellmat[1]):
+            for z in (np.zeros(3), cellmat[2]):
+                corners.append(x+y+z)
+    corners = np.array(corners)
+    return np.min(corners[:,0]), np.max(corners[:,0]), np.min(corners[:,1]), np.max(corners[:,1]) 
             
 
-def Render(svg, prims, Rsphere, shadow=True):
+def Render(svg, prims, Rsphere, shadow=True, topleft=np.array([-1.,-1.])):
+    TL0 = np.zeros(3)
+    TL0[:2] = topleft
     shadows = []
     if shadow:
         for prim in prims:
@@ -80,11 +90,10 @@ def Render(svg, prims, Rsphere, shadow=True):
     prims += shadows
     for prim in sorted(prims, key=lambda x: x[0][2]):
         if prim[1] == "L":
-            # svg.add(sw.shapes.Line(start=prim[1][:2]*200+200, end=prim[2][:2]*200+200, stroke_width=2, stroke="#444", stroke_linejoin="round", stroke_linecap="round"))
             if prim[4] == 0:
-                svg.add(sw.shapes.Line(start=prim[2][:2]*200+200, end=prim[3][:2]*200+200, stroke_width=2, stroke="#444", stroke_linejoin="round", stroke_linecap="round"))
+                svg.add(sw.shapes.Line(start=(prim[2][:2]-topleft)*200, end=(prim[3][:2]-topleft)*200, stroke_width=2, stroke="#444", stroke_linejoin="round", stroke_linecap="round"))
             else:
-                cylinder(svg, prim[2]*200+200, prim[3]*200+200, prim[4]*200)
+                cylinder(svg, (prim[2]-TL0)*200, (prim[3]-TL0)*200, prim[4]*200)
         elif prim[1] == "C":
             z = prim[0][1]
             zr = z - 3.2
@@ -93,12 +102,12 @@ def Render(svg, prims, Rsphere, shadow=True):
             gre = 128+int((1-zs)*127)
             blu = 255
             col = "#{0:02x}{1:02x}{2:02x}".format(red,gre,blu)
-            svg.add(sw.shapes.Circle(center=prim[0][:2]*200+200, r=Rsphere*200, stroke_width=1, stroke="#000", fill=col))
+            svg.add(sw.shapes.Circle(center=(prim[0][:2]-topleft)*200, r=Rsphere*200, stroke_width=1, stroke="#000", fill=col))
         elif prim[1] == "CS":
             col = "#444"
-            svg.add(sw.shapes.Circle(center=prim[0][:2]*200+200, r=Rsphere*200*1.4**3, stroke_width=0, fill=col, fill_opacity=0.15))
-            svg.add(sw.shapes.Circle(center=prim[0][:2]*200+200, r=Rsphere*200*1.4**2, stroke_width=0, fill=col, fill_opacity=0.15))
-            svg.add(sw.shapes.Circle(center=prim[0][:2]*200+200, r=Rsphere*200*1.4**1, stroke_width=0, fill=col, fill_opacity=0.15))
+            svg.add(sw.shapes.Circle(center=(prim[0][:2]-topleft)*200, r=Rsphere*200*1.4**3, stroke_width=0, fill=col, fill_opacity=0.15))
+            svg.add(sw.shapes.Circle(center=(prim[0][:2]-topleft)*200, r=Rsphere*200*1.4**2, stroke_width=0, fill=col, fill_opacity=0.15))
+            svg.add(sw.shapes.Circle(center=(prim[0][:2]-topleft)*200, r=Rsphere*200*1.4**1, stroke_width=0, fill=col, fill_opacity=0.15))
         
 
 def hook2(lattice):
@@ -108,31 +117,19 @@ def hook2(lattice):
     sun = np.array([1., -10., 5.])  # right, down, front
     sun /= np.linalg.norm(sun)
 
-    proj = np.array([[-3**0.5/2, 1./2.],
-                     [+3**0.5/2, 1./2.],
-                     [0.,       -1.]])
-
-
-    proj = np.array([[1., -1., 0.], [1., 1., -2.], [1., 1., 1.]])
-    proj = np.identity(3)
-    theta = 0.0
-    smallrot = np.array([[cos(theta),-sin(theta),0.],
-                         [+sin(theta),cos(theta),0.],
-                         [0.,0.,1.0]])
 
     for i in range(3):
-        proj[i] /= np.linalg.norm(proj[i])
-    proj = np.dot(proj,smallrot)
-    proj = np.linalg.inv(proj)
+        lattice.proj[i] /= np.linalg.norm(lattice.proj[i])
+    lattice.proj = np.linalg.inv(lattice.proj)
 
     cellmat = lattice.repcell.mat
-    projected = np.dot(cellmat, proj)
+    projected = np.dot(cellmat, lattice.proj)
     pos = lattice.reppositions
     prims = []
     Rsphere = 0.06  # nm
     Rcyl    = 0.03  # nm
     RR      = (Rsphere**2 - Rcyl**2)**0.5
-    draw_cell(prims, cellmat)
+    xmin, xmax, ymin, ymax = draw_cell(prims, projected)
     for i,j in lattice.graph.edges():
         vi = pos[i]
         d  = pos[j] - pos[i]
@@ -154,10 +151,25 @@ def hook2(lattice):
             
     for i,v in enumerate(pos):
         prims.append([np.dot(v, projected),"C",i]) #circle
-    svg = sw.Drawing()
-    Render(svg, prims, Rsphere)
+    svg = sw.Drawing(size=("{0}px".format(200*(xmax-xmin)), "{0}px".format(200*(ymax-ymin))))
+    Render(svg, prims, Rsphere, shadow=False, topleft=np.array((xmin,ymin)))
     print(svg.tostring())
+    print("<!-- EndOfFrame -->")
     lattice.logger.info("Hook2: end.")
+
+
+
+
+# argparser
+def hook0(lattice, arg):
+    lattice.logger.info("Hook0: ArgParser.")
+    if arg == "":
+        #This is default.  No reshaping applied.
+        lattice.proj = np.array([[1., 0, 0], [0, 1, 0], [0, 0, 1]])
+    else:
+        assert re.match("^[-+0-9,]+$", arg) is not None, "Argument must be nine floating point numbers separated by commas."
+        lattice.proj = np.array([float(x) for x in arg.split(",")]).reshape(3,3)
+    lattice.logger.info("Hook0: end.")
 
 
 def main():
@@ -169,5 +181,5 @@ def main():
 if __name__ == "__main__":
     main()
 
-hooks = {2:hook2}
+hooks = {0:hook0, 2:hook2}
 
