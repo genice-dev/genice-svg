@@ -38,10 +38,10 @@ setup(
     
     entry_points = {
         'genice_format_hook2': [
-            'svg2 = genice_svg.formats.svg2:hook2',
+            'svg = genice_svg.formats.svg:hook2',
         ],
         'genice_format_hook0': [
-            'svg2 = genice_svg.formats.svg2:hook0',
+            'svg = genice_svg.formats.svg:hook0',
         ],
     },
     install_requires=['svgwrite', 'genice>=0.23'],
