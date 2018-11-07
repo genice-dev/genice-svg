@@ -1,9 +1,9 @@
 .DELETE_ON_ERROR:
-test: T2.svg CS1.svg
+test: T2.svg CS2.svg
 T2.svg: genice_svg/formats/svg.py Makefile
-	genice T2 -f svg > $@
-CS1.svg: genice_svg/formats/svg_poly.py Makefile
-	genice CS1 -f svg_poly > $@
+	genice T2 -f svg[rotatey=15:rotatex=5:shadow] > $@
+CS2.svg: genice_svg/formats/svg.py Makefile
+	genice CS2 -f svg[rotatey=15:rotatex=5:polygon] > $@
 check:
 	./setup.py check
 install:
