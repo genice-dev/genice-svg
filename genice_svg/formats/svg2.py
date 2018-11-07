@@ -327,6 +327,24 @@ def hook0(lattice, arg):
                 if key == "rotmat":
                     value = re.search(r"\[([-0-9,.]+)\]", value).group(1)
                     lattice.proj = np.array([float(x) for x in value.split(",")]).reshape(3,3)
+                elif key == "rotatex":
+                    value = float(value)*pi/180
+                    cosx = cos(value)
+                    sinx = sin(value)
+                    R = np.array([[1, 0, 0], [0, cosx, sinx], [0,-sinx, cosx]])
+                    lattice.proj = np.dot(lattice.proj, R)
+                elif key == "rotatey":
+                    value = float(value)*pi/180
+                    cosx = cos(value)
+                    sinx = sin(value)
+                    R = np.array([[cosx, 0, -sinx], [0, 1, 0], [sinx, 0, cosx]])
+                    lattice.proj = np.dot(lattice.proj, R)
+                elif key == "rotatez":
+                    value = float(value)*pi/180
+                    cosx = cos(value)
+                    sinx = sin(value)
+                    R = np.array([[cosx, sinx, 0], [-sinx, cosx, 0], [0, 0, 1]])
+                    lattice.proj = np.dot(lattice.proj, R)
             else:
                 lattice.logger.info("Flags: {0}".format(a))
                 if a == "shadow":
