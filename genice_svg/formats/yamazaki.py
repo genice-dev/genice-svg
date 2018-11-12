@@ -17,7 +17,7 @@ from countrings import countrings_nx as cr
 
 
 # private library
-import svg2
+import svg
 
 
 
