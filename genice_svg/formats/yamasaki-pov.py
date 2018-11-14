@@ -58,6 +58,23 @@ def Laser(v1, v2, r, color):
                   + "global_lights off ")
 
 
+def LightTube(v1, v2, r, color):
+    dv = v2-v1
+    #return Block("light_group",
+    return             Block("light_source",Vector((v1+v2)/2)+" color {0} area_light     ".format(color) + Juxtapose([Vector(np.array([2.0,0,0])), Vector(dv), "1", "5"]) )#+ Block("photons", "reflection on"))
+#                 + Block("merge",
+#                         Block("cylinder", Juxtapose([Vector(v1-dv*10), Vector(v2+dv*10), "{0}".format(r*2)])) + " hollow "
+#                         + Block("material", "transparent_with_media")
+#                         + Block("photons", "pass_through")
+#                         + " no_shadow")
+              #    + "global_lights off ")
+
+
+
+def PointLight(v, color):
+    return Block("light_source",Vector(v)+" color {0}".format(color))
+
+
 def Polygon(facetype, center, vertices, rim=None):
     n = np.zeros_like(vertices)
     nc = np.zeros(3)
@@ -126,17 +143,32 @@ logging.basicConfig(level=logging.INFO,
 logger = logging.getLogger()
 
 proj = np.array(([0.0, 1.0, 0.0], [0.25, 0.0, (1.0 - 0.25**2)**0.5], [1.0, 0.0, 0.0]))
-drawLase = False
+drawLight = None
 laserColor = "White"
 laserWidth = 0.18
-if len(sys.argv) > 1 and sys.argv[1][0] == "L":
-    drawLaser=True
-    cols = sys.argv[1].split("=")
-    if len(cols) > 1:
-        arg = cols[1]
-        cols = arg.split(":")
-        laserColor = cols[0]
-        laserWidth = float(cols[1])
+Nx = 4
+Ny = 4
+Cut = False
+if len(sys.argv) > 1:
+    i = 1
+    while i < len(sys.argv):
+        if sys.argv[i][0] in ("L", "T", "P"):
+            drawLight = sys.argv[i][0]
+            i += 1
+            cols = sys.argv[1].split("=")
+            if len(cols) > 1:
+                arg = cols[1]
+                cols = arg.split(":")
+                laserColor = cols[0]
+                if len(cols)>1:
+                    laserWidth = float(cols[1])
+        elif sys.argv[i][0] == "C":
+            Cut = True
+            i += 1
+        else:
+            Nx, Ny = int(sys.argv[i]), int(sys.argv[i+1])
+            i += 2
+                
 #mdv = mdview(sys.stdin)
 #for frame, atoms in enumerate(mdv.load_iter()):
 #    outfilename = "{1}{0:05d}.svg".format(frame, name)
@@ -151,10 +183,44 @@ if True:
     atoms = atomss[0]
     for a in atoms:
         atoms[a] = np.array(atoms[a])
+    if Cut: # Cutする場合は事前にコピーする必要がある。
+        logger.info((Nx,Ny))
+        for a in atoms:
+            C = []
+            for x in range(-Nx//2, Nx-Nx//2):
+            # for x in range(0, Nx):
+                C.append(atoms[a] + np.array([x,0.,0.]))
+            atoms[a] = np.vstack(C)
+            C = []
+            for y in range(-Ny//2, Ny-Ny//2):
+            #for y in range(0, Ny):
+                C.append(atoms[a] + np.array([0.,y,0.]))
+            atoms[a] = np.vstack(C)
+            if a == "C":
+                x = atoms[a][:,0]
+                y = atoms[a][:,1]
+                zone = -x*2+1.7 > y
+                atoms[a] = atoms[a][zone,:]
+            if a == "Os":
+                x = atoms[a][:,0]
+                y = atoms[a][:,1]
+                zone = -x*2-1.7 < y
+                atoms[a] = atoms[a][zone,:]
+            atoms[a] /= np.array([Nx, Ny, 1.])
+        mdv.cell[0] *= Nx
+        mdv.cell[1] *= Ny
     s = ""
     # Carbon
+    czmin = np.min(np.dot(atoms["C"], mdv.cell)[:,2])
+    czmax = np.max(np.dot(atoms["C"], mdv.cell)[:,2])
+    ozmin = np.min(np.dot(atoms["Os"], mdv.cell)[:,2])
+    ozmax = np.max(np.dot(atoms["Os"], mdv.cell)[:,2])
+    logger.info("czmin {0} czmax {1}".format(czmin,czmax))
+    logger.info("ozmin {0} ozmax {1}".format(ozmin,ozmax))
+    logger.info(mdv.cell)
     grid200 = pl.determine_grid(mdv.cell, 0.200)
-    CNT = nx.Graph([(i,j) for i,j in pl.pairs_fine(atoms['C'], 0.2, mdv.cell, grid200, distance=False)])
+    logger.info(grid200)
+    CNT = nx.Graph([(i,j) for i,j in pl.pairs_fine(atoms['C'], 0.2, mdv.cell, grid200, distance=False, pairs_engine=pl.pairs_py)])
     for i,j in CNT.edges():
         vi = atoms['C'][i]
         vj = atoms['C'][j]
@@ -163,7 +229,7 @@ if True:
         s += Bond('C', np.dot(vi, mdv.cell), np.dot(vi+dv, mdv.cell))
     # Water
     grid300 = pl.determine_grid(mdv.cell, 0.300)
-    HBN = nx.Graph([(i,j) for i,j in pl.pairs_fine(atoms['Os'], 0.3, mdv.cell, grid300, distance=False)])
+    HBN = nx.Graph([(i,j) for i,j in pl.pairs_fine(atoms['Os'], 0.3, mdv.cell, grid300, distance=False, pairs_engine=pl.pairs_py)])
     for i,j in HBN.edges():
         vi = atoms['Os'][i]
         vj = atoms['Os'][j]
@@ -181,23 +247,51 @@ if True:
         v += ori
         com = np.sum(v, axis=0) / N
         v -= com
-        s += Polygon("G", np.dot(com, mdv.cell), np.dot(v, mdv.cell), rim="O")
+        s += Polygon("P{0}".format(N), np.dot(com, mdv.cell), np.dot(v, mdv.cell), rim="O")
     print("#include \"default.inc\"")
     print(Block("#declare UnitCell=union",s)+";")
-    for x in range(-2,2): #large == right
-        for y in range(-2,2): # large == lower
-    #for x in range(0,1): #large == right
-    #    for y in range(0,1): # large == lower
-            print(Block("object", Juxtapose(["UnitCell translate "+Vector(mdv.cell[0]*x+mdv.cell[1]*y)])))
-            if drawLaser:
-                print(Laser(np.dot(np.array([0.375+x,0.25+y,-100000]), mdv.cell),
+    hx = Nx//2
+    hy = Ny//2
+    if Cut:
+        print(Block("object", "UnitCell"))
+    else:
+        for x in range(-hx,-hx+Nx): #large == right
+            for y in range(-hy,-hy+Ny): # large == lower
+                print(Block("object", Juxtapose(["UnitCell translate "+Vector(mdv.cell[0]*x+mdv.cell[1]*y)])))
+    for x in range(-hx,-hx+Nx): #large == right
+        for y in range(-hy,-hy+Ny): # large == lower
+            if drawLight is not None:
+                if drawLight == "L":
+                    print(Laser(np.dot(np.array([0.375+x,0.25+y,-100000]), mdv.cell),
                             np.dot(np.array([0.375+x,0.25+y,+100000]), mdv.cell), laserWidth, laserColor))
-                print(Laser(np.dot(np.array([0.875+x,0.25+y,-100000]), mdv.cell),
+                    print(Laser(np.dot(np.array([0.875+x,0.25+y,-100000]), mdv.cell),
                             np.dot(np.array([0.875+x,0.25+y,+100000]), mdv.cell), laserWidth, laserColor))
-                print(Laser(np.dot(np.array([0.125+x,0.75+y,-100000]), mdv.cell),
+                    print(Laser(np.dot(np.array([0.125+x,0.75+y,-100000]), mdv.cell),
                             np.dot(np.array([0.125+x,0.75+y,+100000]), mdv.cell), laserWidth, laserColor))
-                print(Laser(np.dot(np.array([0.625+x,0.75+y,-100000]), mdv.cell),
+                    print(Laser(np.dot(np.array([0.625+x,0.75+y,-100000]), mdv.cell),
                             np.dot(np.array([0.625+x,0.75+y,+100000]), mdv.cell), laserWidth, laserColor))
+                elif drawLight=="T":
+                    p = np.dot(np.array([0.375+x,0.25+y,0]), mdv.cell)
+                    print(LightTube(p+np.array([0,0,czmin]),
+                                    p+np.array([0,0,czmax]),
+                                    laserWidth, laserColor))
+                    p = np.dot(np.array([0.875+x,0.25+y,0]), mdv.cell)
+                    print(LightTube(p+np.array([0,0,czmin]),
+                                    p+np.array([0,0,czmax]),
+                                    laserWidth, laserColor))
+                elif drawLight=="P":
+                    p = np.dot(np.array([0.375+x,0.25+y,0]), mdv.cell)
+                    print(PointLight(p+np.array([0,0,(czmin+czmax)/2]),
+                                    laserColor))
+                    p = np.dot(np.array([0.875+x,0.25+y,0]), mdv.cell)
+                    print(PointLight(p+np.array([0,0,(czmin+czmax)/2]),
+                                    laserColor))
+                    p = np.dot(np.array([0.625+x,0.75+y,0]), mdv.cell)
+                    print(PointLight(p+np.array([0,0,(czmin+czmax)/2]),
+                                    laserColor))
+                    p = np.dot(np.array([0.125+x,0.75+y,0]), mdv.cell)
+                    print(PointLight(p+np.array([0,0,(czmin+czmax)/2]),
+                                    laserColor))
                 
 """mask
 print(Block("object",
