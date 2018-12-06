@@ -7,7 +7,11 @@ A [GenIce](https://github.com/vitroid/GenIce) plugin to illustrate the structure
 * [GenIce](https://github.com/vitroid/GenIce) >=0.23.
 * svgwrite.
 
-## Installation
+## Installation from PyPI
+
+    % pip install genice-svg
+
+## Manual Installation
 
 ### System-wide installation
 
