@@ -47,6 +47,10 @@ class mdview(): # for analice
                 line = self.file.readline()
                 cols = line.split()
                 atomname = cols[0]
+                if atomname == "Od":
+                    atomname = "Ow"
+                elif atomname == "Oa":
+                    atomname = "Os"
                 pos = np.array([float(x) for x in cols[1:4]]) * au
                 pos[1] -= 0.3 # small slide 3 AA
                 pos = np.dot(pos,celli) #to relative
@@ -81,12 +85,12 @@ if True:
     projected = np.dot(mdv.cell, proj)
     prims = []
     origin = np.zeros(3)
-    origin[2] = 780*0.052917721067-1
+    origin[2] = 56*0.052917721067-1
     origin = np.dot(origin, proj)
     trim = mdv.cell.copy()
-    trim[2,2] = (956-780)*0.052917721067+2
+    trim[2,2] = (170-56)*0.052917721067+2
     trim = np.dot(trim, proj)
-    xmin, xmax, ymin, ymax = svg2.draw_cell(prims, trim, origin=origin)
+    xmin, xmax, ymin, ymax = svg.draw_cell(prims, trim, origin=origin)
     # Carbon
     grid200 = pl.determine_grid(mdv.cell, 0.200)
     CNT = nx.Graph([(i,j) for i,j in pl.pairs_fine(np.array(atoms['C']), 0.2, mdv.cell, grid200, distance=False)])
@@ -121,7 +125,7 @@ if True:
             dv -= np.floor( dv + 0.5 )
             vj = vi + dv
             vc = vi + dv / 2
-            prims.append([np.dot(vc, projected), "L", np.dot(vj, projected), np.dot(vi, projected), 0, {"stroke_width":5, "stroke":"#4db"}])
+            prims.append([np.dot(vc, projected), "L", np.dot(vj, projected), np.dot(vi, projected), 0, {"stroke_width":1, "stroke":"#ccc"}])  #light green #4db
     # immobile water and HBs
     if len(atoms['Os']) > 0:
         for i,j,d in pl.pairs_fine(np.array(atoms['Os']), 0.3, mdv.cell, grid300, distance=True):
@@ -131,7 +135,7 @@ if True:
             dv -= np.floor( dv + 0.5 )
             vj = vi + dv
             vc = vi + dv / 2
-            prims.append([np.dot(vc, projected), "L", np.dot(vj, projected), np.dot(vi, projected), 0, {"stroke_width":9 }])
+            prims.append([np.dot(vc, projected), "L", np.dot(vj, projected), np.dot(vi, projected), 0, {"stroke_width":3, "stroke":"#000" }])
         for i,j,d in pl.pairs_fine_hetero(np.array(atoms['Os']), np.array(atoms['Ow']), 0.3, mdv.cell, grid300, distance=True):
             vi = atoms['Os'][i]
             vj = atoms['Ow'][j]
@@ -139,11 +143,11 @@ if True:
             dv -= np.floor( dv + 0.5 )
             vj = vi + dv
             vc = vi + dv / 2
-            prims.append([np.dot(vc, projected), "L", np.dot(vj, projected), np.dot(vi, projected), 0, {"stroke_width":7, "stroke":"#286"}])
+            prims.append([np.dot(vc, projected), "L", np.dot(vj, projected), np.dot(vi, projected), 0, {"stroke_width":2, "stroke":"#888"}]) #286 dark green
     Rsphere = 0.02
     #for c in atoms["C"]:
     #    prims.append([np.dot(c, projected), "C", Rsphere, {}])
-    s = svg2.Render(prims, Rsphere, shadow=False,
+    s = svg.Render(prims, Rsphere, shadow=False,
                       topleft=np.array((xmin, ymin)),
                       size=(xmax-xmin, ymax-ymin))
     #    with open(outfilename, "w") as file:
