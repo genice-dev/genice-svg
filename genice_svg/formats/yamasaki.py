@@ -39,7 +39,6 @@ class mdview(): # for analice
                                   [0.,c[1],0.],
                                   [0.,0.,c[2]]])
             self.cell *= au
-            celli = np.linalg.inv(self.cell)
             line = self.file.readline()
             natom = int(line)
             atoms = defaultdict(list)
@@ -52,13 +51,50 @@ class mdview(): # for analice
                 elif atomname == "Oa":
                     atomname = "Os"
                 pos = np.array([float(x) for x in cols[1:4]]) * au
-                pos[1] -= 0.3 # small slide 3 AA
-                pos = np.dot(pos,celli) #to relative
-                pos -= np.floor(pos) # wrap
+                #pos[1] -= 0.3 # small slide 3 AA
+                #pos = np.dot(pos,celli) #to relative
+                #pos -= np.floor(pos) # wrap
                 atoms[atomname].append(pos)
+            carbons = np.array(atoms['C'])
+            czmin = np.min(carbons[:,2]) - 1
+            czmax = np.max(carbons[:,2]) + 1
+            logger.info(czmin)
+            logger.info(czmax)
+            self.cell[2,2] = czmax - czmin
+            celli = np.linalg.inv(self.cell)
+            for atom in atoms:
+                a = np.array(atoms[atom])
+                A = a[:,2] > czmin
+                B = a[:,2] < czmax
+                C = A & B
+                a = a[C,:]
+                a[:,2] -= czmin
+                atoms[atom] = np.dot(a, celli)
             yield atoms
             del atoms
 
+def Carbons(c, cell):
+    prims = []
+    # Carbon
+    grid200 = pl.determine_grid(cell, 0.200)
+    CNT = nx.Graph([(i,j) for i,j in pl.pairs_fine(np.array(c), 0.2, cell, grid200, distance=False)])
+    for ring in cr.CountRings(CNT).rings_iter(6):
+        if len(ring) != 6:
+            continue
+        v = np.zeros((6,3))
+        for i,j in enumerate(ring):
+            v[i] = atoms['C'][j]
+        ori = v[0].copy()
+        v -= ori
+        v -= np.floor( v + 0.5 )
+        com = np.sum(v, axis=0) / 6. #rel
+        v -= com                     #rel
+        com += ori                   #abs
+        prims.append([np.dot(com, projected), "P", np.dot(v, projected),
+                      {"fill":"#fff", "fill_opacity": 0.85, "stroke":"#00f", "stroke_width":2}])
+    return prims
+
+            
 logging.basicConfig(level=logging.INFO,
                     format="%(levelname)s %(message)s")
 logger = logging.getLogger()
@@ -70,6 +106,11 @@ if len(sys.argv) > 1 and sys.argv[1] == "Z":
     drawOw = False
     proj = np.array(([0.0, 1.0, 0.0], [-1.0, 0.0, 0.0], [0.0, 0.0, 1.0]))
     name = "z"
+if len(sys.argv) > 1 and sys.argv[1] == "X":
+    drawOw = True
+    proj = np.array(([0.0, 0.0,-1.0], [0.0, 1.0, 0.0], [1.0, 0.0, 0.0]))
+    name = "x"
+logger.info(np.linalg.det(proj))
 #mdv = mdview(sys.stdin)
 #for frame, atoms in enumerate(mdv.load_iter()):
 #    outfilename = "{1}{0:05d}.svg".format(frame, name)
@@ -84,29 +125,20 @@ if True:
     atoms = atomss[0]
     projected = np.dot(mdv.cell, proj)
     prims = []
+
     origin = np.zeros(3)
-    origin[2] = 56*0.052917721067-1
-    origin = np.dot(origin, proj)
+    # origin[2] = 56*0.052917721067-1
+
     trim = mdv.cell.copy()
-    trim[2,2] = (170-56)*0.052917721067+2
+    # trim[2,2] = 170*0.052917721067+1 - origin[2]
+
+    origin = np.dot(origin, proj)
     trim = np.dot(trim, proj)
-    xmin, xmax, ymin, ymax = svg.draw_cell(prims, trim, origin=origin)
-    # Carbon
-    grid200 = pl.determine_grid(mdv.cell, 0.200)
-    CNT = nx.Graph([(i,j) for i,j in pl.pairs_fine(np.array(atoms['C']), 0.2, mdv.cell, grid200, distance=False)])
-    for ring in cr.CountRings(CNT).rings_iter(6):
-        if len(ring) != 6:
-            continue
-        v = np.zeros((6,3))
-        for i,j in enumerate(ring):
-            v[i] = atoms['C'][j]
-        ori = v[0].copy()
-        v -= ori
-        v -= np.floor( v + 0.5 )
-        v += ori
-        com = np.sum(v, axis=0) / 6.
-        prims.append([np.dot(com, projected), "P", np.dot(v, projected),
-                      {"fill":"#fff", "fill_opacity": 0.85, "stroke":"#00f", "stroke_width":2}])
+    xmin, xmax, ymin, ymax = svg.draw_cell(prims, trim, stroke_width=0)
+
+    if True:
+        prims += Carbons(atoms['C'], mdv.cell)
+    
 #    for i,j in CNT.edges():
 #        vi = atoms['C'][i]
 #        vj = atoms['C'][j]

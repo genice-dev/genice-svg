@@ -110,7 +110,8 @@ def polygon(svg, com, d, **options):
     group.add(path)
     
 
-def draw_cell(prims, cellmat, origin=np.zeros(3)):
+def draw_cell(prims, cellmat, **options): #, origin=np.zeros(3)):
+    origin = np.zeros(3)
     for a in (0., 1.):
         for b in (0., 1.):
             v0 = np.array([0., a, b]+origin)
@@ -119,21 +120,21 @@ def draw_cell(prims, cellmat, origin=np.zeros(3)):
             prims.append([np.dot(mid, cellmat),
                           "L",
                           np.dot(v0,  cellmat),
-                          np.dot(v1,  cellmat), 0, {}])
+                          np.dot(v1,  cellmat), 0, options])
             v0 = np.array([b, 0., a]+origin)
             v1 = np.array([b, 1., a]+origin)
             mid = (v0+v1)/2
             prims.append([np.dot(mid, cellmat),
                           "L",
                           np.dot(v0,  cellmat),
-                          np.dot(v1,  cellmat), 0, {}])
+                          np.dot(v1,  cellmat), 0, options])
             v0 = np.array([a, b, 0.]+origin)
             v1 = np.array([a, b, 1.]+origin)
             mid = (v0+v1)/2
             prims.append([np.dot(mid, cellmat),
                           "L",
                           np.dot(v0,  cellmat),
-                          np.dot(v1,  cellmat), 0, {}])
+                          np.dot(v1,  cellmat), 0, options])
     corners = []
     for x in (np.zeros(3), cellmat[0]):
         for y in (np.zeros(3), cellmat[1]):
