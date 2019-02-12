@@ -1,11 +1,12 @@
 # genice-svg
 
-A [GenIce](https://github.com/vitroid/GenIce) plugin to illustrate the structure in SVG format.
+A [GenIce](https://github.com/vitroid/GenIce) plugin to illustrate the structure in SVG (and PNG) format.
 
 ## Requirements
 
 * [GenIce](https://github.com/vitroid/GenIce) >=0.23.
 * svgwrite.
+* Pillow.
 
 ## Installation from PyPI
 
@@ -31,6 +32,17 @@ Copy the files in genice_svg/formats/ into your local formats folder of GenIce.
         rotatez=30
 		polygon        Draw polygons instead of a ball and stick model.
 		shadow         Draw shadows behind balls.
+
+Png is a quick alternative for svg. Use png if making svg is too slow.
+
+	% genice CS2 -r 3 3 3 -f png[options:separated:by:colons] > CS2.png
+	
+	Options:
+        rotatex=30
+        rotatey=30
+        rotatez=30
+		shadow         Draw shadows behind balls.
+
 
 ## Test in place
 
