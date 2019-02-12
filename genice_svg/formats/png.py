@@ -1,113 +1,48 @@
 # coding: utf-8
 """
-SVG format rev. 2
+PNG, derived from SVG format rev. 2
 """
 
 import colorsys
 import numpy as np
 import yaplotlib as yp
 from math import sin,cos, atan2,pi, exp
-import svgwrite as sw
 import re
 import logging
 from countrings import countrings_nx as cr
 import networkx as nx
+import PIL.ImageDraw as ImageDraw
+import PIL.Image as Image
+import io
+import sys
 
-
-
-def cylinder(svg, v1_, v2_, r, **options):
+def cylinder(draw, v1_, v2_, r, **options):
     """
     draw a 3D cylinder
     """
     options = {"fill": "#fff", **options}
-    group = svg.add( svg.g( id='Cylinder') )
-    if v1_[2] > v2_[2]:
-        v1, v2 = v2_, v1_
-    else:
-        v1, v2 = v1_, v2_
-    dir = v2[:2] - v1[:2]
-    angle = atan2(dir[1],dir[0])
-    # e   = dir / np.linalg.norm(dir)
-    # ee  = np.array([e[1], -e[0]])
-    d   = v2 - v1
-    ratio = d[2] / np.linalg.norm(d)
-    u = sw.shapes.Ellipse(center=v1[:2], r=(ratio*r, r), **options)
-    u.rotate(angle*180/pi, center=v1[:2])
-    group.add(u)
-    u = sw.shapes.Rect((v1[0],v1[1]-r), (np.linalg.norm(dir), 2*r), **{**options, "stroke_width":0})
-    u.rotate(angle*180/pi, center=v1[:2])
-    group.add(u)
-    u = sw.shapes.Ellipse(center=v2[:2], r=(ratio*r, r), **{**options, "fill":"#ddd"})
-    u.rotate(angle*180/pi, center=v2[:2])
-    group.add(u)
-    u = sw.shapes.Line((v1[0],v1[1]-r), (v1[0]+np.linalg.norm(dir), v1[1]-r), stroke_width=1, stroke="#000")
-    u.rotate(angle*180/pi, center=v1[:2])
-    group.add(u)
-    u = sw.shapes.Line((v1[0],v1[1]+r), (v1[0]+np.linalg.norm(dir), v1[1]+r), stroke_width=1, stroke="#000")
-    u.rotate(angle*180/pi, center=v1[:2])
-    group.add(u)
+    draw.line([int(x) for x in [v1_[0], v1_[1], v2_[0], v2_[1]]],
+              width=int(r*2), fill=options["fill"])
     
-    
-def cylinder_path(R, ratio, L, **kwargs):
-    # horizontal, start from origin
-    magic = 0.552284749831
-    x1 = R*ratio
-    x2 = x1*magic
-    y1 = R
-    y2 = y1*magic
-    p = []
-    p.append(["M", 0, -y1])
-    p.append(["L", L, -y1])
-    p.append(["C", L+x2,-y1, L+x1, -y2,  L+x1, 0])
-    p.append(["C", L+x1, y2, L+x2,  y1,  L,   y1])
-    p.append(["L", 0, y1])
-    p.append(["C",-x2, y1,-x1, y2,  -x1,0])
-    p.append(["C",-x1,-y2,-x2,-y1, 0,-y1])
-    p.append(["Z"])
-    return sw.path.Path(d=p, **kwargs)
 
 
-def cylinder_new(svg, v1_, v2_, r, **options):
-    """
-    draw a 3D cylinder
-    """
-    group = svg.add( svg.g( id='Cylinder') )
-    if v1_[2] > v2_[2]:
-        v1, v2 = v2_, v1_
-    else:
-        v1, v2 = v1_, v2_
-    dir = v2[:2] - v1[:2]
-    angle = atan2(dir[1],dir[0])
-    d   = v2 - v1
-    ratio = d[2] / np.linalg.norm(d)
-    L = np.linalg.norm(dir)
-    path = cylinder_path(r, ratio, L, **options)
-    path.translate(v1[0],v1[1])
-    path.rotate(angle*180/pi, center=(0,0))
-    group.add(path)
-    u = sw.shapes.Ellipse(center=v2[:2], r=(ratio*r, r),
-                          **options) #, fill=endfill)
-    u.rotate(angle*180/pi, center=v2[:2])
-    group.add(u)
-
-
-def polygon_path(vs, **kwargs):
-    p = []
-    p.append(["M", vs[-1][0], vs[-1][1]])
-    for v in vs:
-        p.append(["L", v[0], v[1]])
-    p.append(["Z"])
-    return sw.path.Path(d=p, **kwargs)
+# def polygon_path(vs, **kwargs):
+#     p = []
+#     p.append(["M", vs[-1][0], vs[-1][1]])
+#     for v in vs:
+#         p.append(["L", v[0], v[1]])
+#     p.append(["Z"])
+#     return sw.path.Path(d=p, **kwargs)
 
 
 
-def polygon(svg, com, d, **options):
-    """
-    draw a polygon
-    """
-    group = svg.add( svg.g( id='Polygon') )
-    path = polygon_path(com+d, **options)
-    group.add(path)
+# def polygon(svg, com, d, **options):
+#     """
+#     draw a polygon
+#     """
+#     group = svg.add( svg.g( id='Polygon') )
+#     path = polygon_path(com+d, **options)
+#     group.add(path)
     
 
 def draw_cell(prims, cellmat, origin=np.zeros(3)):
@@ -157,27 +92,31 @@ sun /= np.linalg.norm(sun)
 
 
 
-def Render(prims, Rsphere, shadow=True, topleft=np.array([-1.,-1.]), size=(50.,50.)):
+def Render(prims, Rsphere, shadow=True, topleft=np.array([-1.,-1.]), size=(50,50)):
     logger = logging.getLogger()
-    svg = sw.Drawing(size=("{0}px".format(size[0]*200), "{0}px".format(size[1]*200)))
+    size = tuple((int(x*200) for x in size))
+    logger.info(size)
+    image = Image.new("RGB", size, (51,51,51))
+    draw  = ImageDraw.Draw(image, "RGBA")
+    
     TL0 = np.zeros(3)
     TL0[:2] = topleft
     shadows = []
     linedefaults = { "stroke_width": 2,
                      "stroke": "#000",
-                     "stroke_linejoin": "round",
-                     "stroke_linecap" : "round",
+                     #"stroke_linejoin": "round",
+                     #"stroke_linecap" : "round",
     }
     filldefaults = { "stroke_width": 1,
                      "stroke": "#000",
                      "fill": "#0ff",
-                     "stroke_linejoin": "round",
-                     "stroke_linecap" : "round",
-                     "fill_opacity": 1.0,
+                     #"stroke_linejoin": "round",
+                     #"stroke_linecap" : "round",
+                     #"fill_opacity": 1.0,
     }
     shadowdefaults = { "stroke_width": 0,
-                       "fill": "#888",
-                       "fill_opacity": 0.08,
+                       "fill": "#8881",
+                       #"fill_opacity": 0.08,
     }
     if shadow:
         for prim in prims:
@@ -195,38 +134,49 @@ def Render(prims, Rsphere, shadow=True, topleft=np.array([-1.,-1.]), size=(50.,5
         if prim[1] == "L":
             if prim[4] == 0:
                 options = {**linedefaults, **prim[5]}
-                svg.add(sw.shapes.Line(start=(prim[2][:2]-topleft)*200, end=(prim[3][:2]-topleft)*200, **options))
+                s = (prim[2][:2]-topleft)*200
+                e = (prim[3][:2]-topleft)*200
+                draw.line([int(s[0]), int(s[1]), int(e[0]), int(e[1])], fill=options["stroke"], width=options["stroke_width"])
             else:
                 options = {**filldefaults, **prim[5]}
-                cylinder_new(svg, (prim[2]-TL0)*200, (prim[3]-TL0)*200, prim[4]*200, **options)
-        elif prim[1] == "P":
-            options = prim[3]
-            if "fillhs" in options:
-                normal = Normal(prim[2])
-                normal /= np.linalg.norm(normal)
-                cosine = abs(np.dot(sun, normal))
-                hue, sat = options["fillhs"]
-                del options["fillhs"]
-                bri = cosine*0.5+0.5
-                if sat < 0.2:
-                    bri *= 0.9
-                if cosine > 0.8:
-                    sat *= (1 - (cosine-0.8)*3)
-                r,g,b = colorsys.hsv_to_rgb(hue/360., sat, bri)
-                rgb = "#{0:x}{1:x}{2:x}".format(int(r*15.9), int(g*15.9), int(b*15.9))
-                options["fill"] = rgb
-            options = {**filldefaults, **options}
-            polygon(svg, (prim[0]-TL0)*200, prim[2]*200, **options)
+                cylinder(draw, (prim[2]-TL0)*200, (prim[3]-TL0)*200, prim[4]*200, **options)
+        # elif prim[1] == "P":
+        #     options = prim[3]
+        #     if "fillhs" in options:
+        #         normal = Normal(prim[2])
+        #         normal /= np.linalg.norm(normal)
+        #         cosine = abs(np.dot(sun, normal))
+        #         hue, sat = options["fillhs"]
+        #         del options["fillhs"]
+        #         bri = cosine*0.5+0.5
+        #         if sat < 0.2:
+        #             bri *= 0.9
+        #         if cosine > 0.8:
+        #             sat *= (1 - (cosine-0.8)*3)
+        #         r,g,b = colorsys.hsv_to_rgb(hue/360., sat, bri)
+        #         rgb = "#{0:x}{1:x}{2:x}".format(int(r*15.9), int(g*15.9), int(b*15.9))
+        #         options["fill"] = rgb
+        #     options = {**filldefaults, **options}
+        #     polygon(svg, (prim[0]-TL0)*200, prim[2]*200, **options)
         elif prim[1] == "C":
             options = { **filldefaults, **prim[3] }
             Rsphere = prim[2]
-            svg.add(sw.shapes.Circle(center=(prim[0][:2]-topleft)*200, r=Rsphere*200, **options))
+            center=(prim[0][:2]-topleft)*200
+            r=Rsphere*200
+            tl = center-r
+            br = center+r
+            draw.ellipse([int(x) for x in [tl[0], tl[1], br[0], br[1]]], fill=options["fill"])
         elif prim[1] == "CS":
             Rsphere = prim[2]
             options = { **shadowdefaults, **prim[3] }
             # logger.info("{0}".format(options))
-            svg.add(sw.shapes.Circle(center=(prim[0][:2]-topleft)*200, r=Rsphere*200, **options))
-    return svg.tostring()
+            center=(prim[0][:2]-topleft)*200
+            r=Rsphere*200
+            tl = center-r
+            br = center+r
+            
+            draw.ellipse([int(x) for x in [tl[0], tl[1], br[0], br[1]]], fill=options["fill"])
+    return image
         
 # set of hue and saturation
 hue_sat = {3:(60., 0.8),
@@ -237,7 +187,7 @@ hue_sat = {3:(60., 0.8),
            8:(350, 0.5)} # red-purple
 
 def hook2(lattice):
-    lattice.logger.info("Hook2: A. Output molecular positions in SVG format. (Improved)")
+    lattice.logger.info("Hook2: A. Output molecular positions in PNG format. (Improved)")
     offset = np.zeros(3)
 
     for i in range(3):
@@ -296,10 +246,16 @@ def hook2(lattice):
 
         for i,v in enumerate(pos):
             prims.append([np.dot(v, projected),"C",Rsphere, {}]) #circle
-    print(Render(prims, Rsphere, shadow=lattice.shadow,
+    xsize = xmax - xmin
+    ysize = ymax - ymin
+    lattice.logger.info((xsize,ysize))
+    image = Render(prims, Rsphere, shadow=lattice.shadow,
                  topleft=np.array((xmin,ymin)),
-                 size=(xmax-xmin, ymax-ymin)))
-    print("<!-- EndOfFrame -->")
+                 size=(int(xsize*200), int(ysize*200)))
+    imgByteArr = io.BytesIO()
+    image.save(imgByteArr, format='PNG')
+    imgByteArr = imgByteArr.getvalue()
+    sys.stdout.buffer.write(imgByteArr)
     lattice.logger.info("Hook2: end.")
 
 
@@ -349,8 +305,8 @@ def hook0(lattice, arg):
                 lattice.logger.info("Flags: {0}".format(a))
                 if a == "shadow":
                     lattice.shadow = True
-                elif a == "polygon":
-                    lattice.poly = True
+                #elif a == "polygon":
+                #    lattice.poly = True
                 else:
                     assert False, "Wrong options."
     lattice.logger.info("Hook0: end.")
@@ -358,9 +314,10 @@ def hook0(lattice, arg):
 
 def main():
     #print(atan2(sin(3),cos(3)))
-    svg = sw.Drawing()
-    cylinder_new(svg, np.array((20.,20.,20.)),np.array((100.,20.,100.)),15.)
-    print(svg.tostring())
+    image = Image.new("RGB", (1000,1000))
+    draw = ImageDraw.Draw(image, "RGBA")
+    cylinder(draw, np.array((20.,20.,20.)),np.array((100.,20.,100.)),15.)
+    image.save("test.png")
     
 if __name__ == "__main__":
     main()
