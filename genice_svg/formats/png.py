@@ -251,7 +251,7 @@ def hook2(lattice):
     lattice.logger.info((xsize,ysize))
     image = Render(prims, Rsphere, shadow=lattice.shadow,
                  topleft=np.array((xmin,ymin)),
-                 size=(int(xsize*200), int(ysize*200)))
+                 size=(xsize, ysize))
     imgByteArr = io.BytesIO()
     image.save(imgByteArr, format='PNG')
     imgByteArr = imgByteArr.getvalue()
