@@ -92,7 +92,7 @@ sun /= np.linalg.norm(sun)
 
 
 
-def Render(prims, Rsphere, shadow=True, topleft=np.array([-1.,-1.]), size=(50,50)):
+def Render(prims, Rsphere, shadow=None, topleft=np.array([-1.,-1.]), size=(50,50)):
     logger = logging.getLogger()
     size = tuple((int(x*200) for x in size))
     logger.info(size)
@@ -115,10 +115,11 @@ def Render(prims, Rsphere, shadow=True, topleft=np.array([-1.,-1.]), size=(50,50
                      #"fill_opacity": 1.0,
     }
     shadowdefaults = { "stroke_width": 0,
-                       "fill": "#8881",
+                       #"fill": "#8881",
+                       "fill": shadow,
                        #"fill_opacity": 0.08,
     }
-    if shadow:
+    if shadow is not None:
         for prim in prims:
             ofs = np.array([0,0,0.1])
             if prim[1] == "C":
@@ -168,7 +169,7 @@ def Render(prims, Rsphere, shadow=True, topleft=np.array([-1.,-1.]), size=(50,50
             draw.ellipse([int(x) for x in [tl[0], tl[1], br[0], br[1]]], fill=options["fill"])
         elif prim[1] == "CS":
             Rsphere = prim[2]
-            options = { **shadowdefaults, **prim[3] }
+            options = { **shadowdefaults,} #  **prim[3] }
             # logger.info("{0}".format(options))
             center=(prim[0][:2]-topleft)*200
             r=Rsphere*200
@@ -268,7 +269,7 @@ def hook2(lattice):
 
 def hook0(lattice, arg):
     lattice.logger.info("Hook0: ArgParser.")
-    lattice.shadow = False
+    lattice.shadow = None
     lattice.poly = False
     lattice.proj = np.array([[1., 0, 0], [0, 1, 0], [0, 0, 1]])
     if arg == "":
@@ -304,7 +305,7 @@ def hook0(lattice, arg):
             else:
                 lattice.logger.info("Flags: {0}".format(a))
                 if a == "shadow":
-                    lattice.shadow = True
+                    lattice.shadow = "#8881"
                 #elif a == "polygon":
                 #    lattice.poly = True
                 else:
