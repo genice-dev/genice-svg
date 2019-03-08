@@ -95,9 +95,11 @@ sun /= np.linalg.norm(sun)
 def Render(prims, Rsphere, shadow=None, topleft=np.array([-1.,-1.]), size=(50,50)):
     logger = logging.getLogger()
     size = tuple((int(x*200) for x in size))
-    logger.info(size)
-    image = Image.new("RGB", size, (51,51,51))
+    image = Image.new("RGB", size, (0,0,0))
     draw  = ImageDraw.Draw(image, "RGBA")
+    # special treatment for post-K project
+    # draw.rectangle([0,0,size[0]/2,size[1]], fill="#00A2FF")
+    # draw.rectangle([size[0]/2,0,size[0],size[1]], fill="#EF5FA7")
     
     TL0 = np.zeros(3)
     TL0[:2] = topleft
@@ -249,7 +251,6 @@ def hook2(lattice):
             prims.append([np.dot(v, projected),"C",Rsphere, {}]) #circle
     xsize = xmax - xmin
     ysize = ymax - ymin
-    lattice.logger.info((xsize,ysize))
     image = Render(prims, Rsphere, shadow=lattice.shadow,
                  topleft=np.array((xmin,ymin)),
                  size=(xsize, ysize))
@@ -302,6 +303,8 @@ def hook0(lattice, arg):
                     sinx = sin(value)
                     R = np.array([[cosx, sinx, 0], [-sinx, cosx, 0], [0, 0, 1]])
                     lattice.proj = np.dot(lattice.proj, R)
+                elif key == "shadow":
+                    lattice.shadow = value
             else:
                 lattice.logger.info("Flags: {0}".format(a))
                 if a == "shadow":
