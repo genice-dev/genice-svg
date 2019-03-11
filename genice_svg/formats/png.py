@@ -92,14 +92,14 @@ sun /= np.linalg.norm(sun)
 
 
 
-def Render(prims, Rsphere, shadow=None, topleft=np.array([-1.,-1.]), size=(50,50)):
+def Render(prims, Rsphere, shadow=None, topleft=np.array([-1.,-1.]), size=(50,50), zoom=200):
     logger = logging.getLogger()
-    size = tuple((int(x*200) for x in size))
+    size = tuple((int(x*zoom) for x in size))
     image = Image.new("RGB", size, (0,0,0))
     draw  = ImageDraw.Draw(image, "RGBA")
     # special treatment for post-K project
-    # draw.rectangle([0,0,size[0]/2,size[1]], fill="#00A2FF")
-    # draw.rectangle([size[0]/2,0,size[0],size[1]], fill="#EF5FA7")
+    # draw.rectangle([0,0,size[0]/2,size[1]], fill="#EF5FA7")
+    # draw.rectangle([size[0]/2,0,size[0],size[1]], fill="#00A2FF")
     
     TL0 = np.zeros(3)
     TL0[:2] = topleft
@@ -123,12 +123,13 @@ def Render(prims, Rsphere, shadow=None, topleft=np.array([-1.,-1.]), size=(50,50
     }
     if shadow is not None:
         for prim in prims:
-            ofs = np.array([0,0,0.1])
+            r = prim[2]
+            ofs = np.array([0,0,r])
             if prim[1] == "C":
-                shadows.append([prim[0] - ofs, prim[1]+"S", 0.1*1.4]+prim[3:])
-                shadows.append([prim[0] - ofs*1.4**2, prim[1]+"S", 0.1*1.4**2]+prim[3:])
-                shadows.append([prim[0] - ofs*1.4**3, prim[1]+"S", 0.1*1.4**3]+prim[3:])
-                shadows.append([prim[0] - ofs*1.4**4, prim[1]+"S", 0.1*1.4**4]+prim[3:])
+                shadows.append([prim[0] - ofs, prim[1]+"S", r*1.4]+prim[3:])
+                shadows.append([prim[0] - ofs*1.4**2, prim[1]+"S", r*1.4**2]+prim[3:])
+                shadows.append([prim[0] - ofs*1.4**3, prim[1]+"S", r*1.4**3]+prim[3:])
+                shadows.append([prim[0] - ofs*1.4**4, prim[1]+"S", r*1.4**4]+prim[3:])
     prims += shadows
     for prim in sorted(prims, key=lambda x: x[0][2]):
         if not ( (-0.5 < prim[0][0]-topleft[0] < size[0]+0.5) and
@@ -137,12 +138,23 @@ def Render(prims, Rsphere, shadow=None, topleft=np.array([-1.,-1.]), size=(50,50
         if prim[1] == "L":
             if prim[4] == 0:
                 options = {**linedefaults, **prim[5]}
-                s = (prim[2][:2]-topleft)*200
-                e = (prim[3][:2]-topleft)*200
+                s = (prim[2][:2]-topleft)*zoom
+                e = (prim[3][:2]-topleft)*zoom
                 draw.line([int(s[0]), int(s[1]), int(e[0]), int(e[1])], fill=options["stroke"], width=options["stroke_width"])
             else:
                 options = {**filldefaults, **prim[5]}
-                cylinder(draw, (prim[2]-TL0)*200, (prim[3]-TL0)*200, prim[4]*200, **options)
+                cylinder(draw, (prim[2]-TL0)*zoom, (prim[3]-TL0)*zoom, prim[4]*zoom, **options)
+        elif prim[1] == "L2":
+            #new, simpler expression.
+            #half relative vector is given
+            if prim[3] == 0:
+                options = {**linedefaults, **prim[4]}
+                s = ((prim[0]+prim[2])[:2]-topleft)*zoom
+                e = ((prim[0]-prim[2])[:2]-topleft)*zoom
+                draw.line([int(s[0]), int(s[1]), int(e[0]), int(e[1])], fill=options["stroke"], width=options["stroke_width"])
+            else:
+                options = {**filldefaults, **prim[4]}
+                cylinder(draw, (prim[0]+prim[2]-TL0)*zoom, (prim[0]-prim[2]-TL0)*zoom, prim[3]*zoom, **options)
         # elif prim[1] == "P":
         #     options = prim[3]
         #     if "fillhs" in options:
@@ -160,12 +172,12 @@ def Render(prims, Rsphere, shadow=None, topleft=np.array([-1.,-1.]), size=(50,50
         #         rgb = "#{0:x}{1:x}{2:x}".format(int(r*15.9), int(g*15.9), int(b*15.9))
         #         options["fill"] = rgb
         #     options = {**filldefaults, **options}
-        #     polygon(svg, (prim[0]-TL0)*200, prim[2]*200, **options)
+        #     polygon(svg, (prim[0]-TL0)*zoom, prim[2]*zoom, **options)
         elif prim[1] == "C":
             options = { **filldefaults, **prim[3] }
             Rsphere = prim[2]
-            center=(prim[0][:2]-topleft)*200
-            r=Rsphere*200
+            center=(prim[0][:2]-topleft)*zoom
+            r=Rsphere*zoom
             tl = center-r
             br = center+r
             draw.ellipse([int(x) for x in [tl[0], tl[1], br[0], br[1]]], fill=options["fill"])
@@ -173,8 +185,8 @@ def Render(prims, Rsphere, shadow=None, topleft=np.array([-1.,-1.]), size=(50,50
             Rsphere = prim[2]
             options = { **shadowdefaults,} #  **prim[3] }
             # logger.info("{0}".format(options))
-            center=(prim[0][:2]-topleft)*200
-            r=Rsphere*200
+            center=(prim[0][:2]-topleft)*zoom
+            r=Rsphere*zoom
             tl = center-r
             br = center+r
             
