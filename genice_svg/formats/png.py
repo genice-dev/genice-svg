@@ -92,7 +92,11 @@ sun /= np.linalg.norm(sun)
 
 
 
-def Render(prims, Rsphere, shadow=None, topleft=np.array([-1.,-1.]), size=(50,50), zoom=200):
+def Render(prims, Rsphere, shadow=None, topleft=np.array([-1.,-1.]), size=(50,50), zoom=200, vertices=None, vecs=None):
+    """
+    When vertex list is given, the coords in prims are not indicated in vectors but in indices
+    Vecs are vectors not needed to be sorted (used in "L" command)
+    """
     logger = logging.getLogger()
     size = tuple((int(x*zoom) for x in size))
     image = Image.new("RGB", size, (0,0,0))
@@ -103,7 +107,6 @@ def Render(prims, Rsphere, shadow=None, topleft=np.array([-1.,-1.]), size=(50,50
     
     TL0 = np.zeros(3)
     TL0[:2] = topleft
-    shadows = []
     linedefaults = { "stroke_width": 2,
                      "stroke": "#000",
                      #"stroke_linejoin": "round",
@@ -122,16 +125,13 @@ def Render(prims, Rsphere, shadow=None, topleft=np.array([-1.,-1.]), size=(50,50
                        #"fill_opacity": 0.08,
     }
     if shadow is not None:
-        for prim in prims:
-            r = prim[2]
-            ofs = np.array([0,0,r])
-            if prim[1] == "C":
-                shadows.append([prim[0] - ofs, prim[1]+"S", r*1.4]+prim[3:])
-                shadows.append([prim[0] - ofs*1.4**2, prim[1]+"S", r*1.4**2]+prim[3:])
-                shadows.append([prim[0] - ofs*1.4**3, prim[1]+"S", r*1.4**3]+prim[3:])
-                shadows.append([prim[0] - ofs*1.4**4, prim[1]+"S", r*1.4**4]+prim[3:])
-    prims += shadows
-    for prim in sorted(prims, key=lambda x: x[0][2]):
+        r = Rsphere
+        Z = np.array([0,0,1.0])
+        prims += [[prim[0] - Z*r*1.4**j, prim[1]+'S', r*1.4**j]+prim[3:]
+                  for j in range(1,5) for prim in prims if prim[1] == 'C']
+    prims.sort(key=lambda x: -x[0][2])
+    while len(prims)>0:
+        prim=prims.pop()
         if not ( (-0.5 < prim[0][0]-topleft[0] < size[0]+0.5) and
                  (-0.5 < prim[0][1]-topleft[1] < size[1]+0.5) ):
             continue

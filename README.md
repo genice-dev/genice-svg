@@ -1,3 +1,8 @@
+<img src="4R.png">
+
+    genice 4R -f png[shadow:rotatex=2:rotatey=88] > 4R.png
+
+
 # genice-svg
 
 A [GenIce](https://github.com/vitroid/GenIce) plugin to illustrate the structure in SVG (and PNG) format.
