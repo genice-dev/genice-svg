@@ -26,23 +26,6 @@ def cylinder(draw, v1_, v2_, r, **options):
     
 
 
-# def polygon_path(vs, **kwargs):
-#     p = []
-#     p.append(["M", vs[-1][0], vs[-1][1]])
-#     for v in vs:
-#         p.append(["L", v[0], v[1]])
-#     p.append(["Z"])
-#     return sw.path.Path(d=p, **kwargs)
-
-
-
-# def polygon(svg, com, d, **options):
-#     """
-#     draw a polygon
-#     """
-#     group = svg.add( svg.g( id='Polygon') )
-#     path = polygon_path(com+d, **options)
-#     group.add(path)
     
 
 def draw_cell(prims, cellmat, origin=np.zeros(3)):
@@ -155,24 +138,6 @@ def Render(prims, Rsphere, shadow=None, topleft=np.array([-1.,-1.]), size=(50,50
             else:
                 options = {**filldefaults, **prim[4]}
                 cylinder(draw, (prim[0]+prim[2]-TL0)*zoom, (prim[0]-prim[2]-TL0)*zoom, prim[3]*zoom, **options)
-        # elif prim[1] == "P":
-        #     options = prim[3]
-        #     if "fillhs" in options:
-        #         normal = Normal(prim[2])
-        #         normal /= np.linalg.norm(normal)
-        #         cosine = abs(np.dot(sun, normal))
-        #         hue, sat = options["fillhs"]
-        #         del options["fillhs"]
-        #         bri = cosine*0.5+0.5
-        #         if sat < 0.2:
-        #             bri *= 0.9
-        #         if cosine > 0.8:
-        #             sat *= (1 - (cosine-0.8)*3)
-        #         r,g,b = colorsys.hsv_to_rgb(hue/360., sat, bri)
-        #         rgb = "#{0:x}{1:x}{2:x}".format(int(r*15.9), int(g*15.9), int(b*15.9))
-        #         options["fill"] = rgb
-        #     options = {**filldefaults, **options}
-        #     polygon(svg, (prim[0]-TL0)*zoom, prim[2]*zoom, **options)
         elif prim[1] == "C":
             options = { **filldefaults, **prim[3] }
             Rsphere = prim[2]
@@ -217,50 +182,27 @@ def hook2(lattice):
     Rcyl    = 0.03  # nm
     RR      = (Rsphere**2 - Rcyl**2)**0.5
     xmin, xmax, ymin, ymax = draw_cell(prims, projected)
-    if lattice.poly:
-        for ring in cr.CountRings(nx.Graph(lattice.graph)).rings_iter(8):
-            nedges = len(ring)
-            deltas = np.zeros((nedges,3))
-            d2 = np.zeros(3)
-            for k,i in enumerate(ring):
-                d = lattice.reppositions[i] - lattice.reppositions[ring[0]]
-                d -= np.floor(d+0.5)
-                deltas[k] = d
-                dd = lattice.reppositions[ring[k]] - lattice.reppositions[ring[k-1]]
-                dd -= np.floor(dd+0.5)
-                d2 += dd
-            # d2 must be zeros
-            if np.all(np.absolute(d2) < 1e-5):
-                comofs = np.sum(deltas, axis=0) / len(ring)
-                deltas -= comofs
-                com = lattice.reppositions[ring[0]] + comofs
-                com -= np.floor(com)
-                # rel to abs
-                com    = np.dot(com,    projected)
-                deltas = np.dot(deltas, projected)
-                prims.append([com, "P", deltas, {"fillhs":hue_sat[nedges]}]) # line
-    else:
-        for i,j in lattice.graph.edges():
-            vi = pos[i]
-            d  = pos[j] - pos[i]
+    for i,j in lattice.graph.edges():
+        vi = pos[i]
+        d  = pos[j] - pos[i]
+        d -= np.floor(d+0.5)
+        center = vi+d/2
+        dp = np.dot(d, projected)
+        o = dp / np.linalg.norm(dp)
+        o *= RR
+        prims.append([np.dot(center,projected), "L", np.dot(vi,projected)+o, np.dot(vi+d,projected)-o,Rcyl, {"fill":"#fff"}]) # line
+        if np.linalg.norm(vi+d-pos[j]) > 0.01:
+            vj = pos[j]
+            d  = pos[i] - pos[j]
             d -= np.floor(d+0.5)
-            center = vi+d/2
+            center = vj+d/2
             dp = np.dot(d, projected)
             o = dp / np.linalg.norm(dp)
             o *= RR
-            prims.append([np.dot(center,projected), "L", np.dot(vi,projected)+o, np.dot(vi+d,projected)-o,Rcyl, {"fill":"#fff"}]) # line
-            if np.linalg.norm(vi+d-pos[j]) > 0.01:
-                vj = pos[j]
-                d  = pos[i] - pos[j]
-                d -= np.floor(d+0.5)
-                center = vj+d/2
-                dp = np.dot(d, projected)
-                o = dp / np.linalg.norm(dp)
-                o *= RR
-                prims.append([np.dot(center,projected), "L", np.dot(vj,projected)+o, np.dot(vj+d,projected)-o,Rcyl, {"fill":"#fff"}]) # line
+            prims.append([np.dot(center,projected), "L", np.dot(vj,projected)+o, np.dot(vj+d,projected)-o,Rcyl, {"fill":"#fff"}]) # line
 
-        for i,v in enumerate(pos):
-            prims.append([np.dot(v, projected),"C",Rsphere, {}]) #circle
+    for i,v in enumerate(pos):
+        prims.append([np.dot(v, projected),"C",Rsphere, {}]) #circle
     xsize = xmax - xmin
     ysize = ymax - ymin
     image = Render(prims, Rsphere, shadow=lattice.shadow,
@@ -283,7 +225,7 @@ def hook2(lattice):
 def hook0(lattice, arg):
     lattice.logger.info("Hook0: ArgParser.")
     lattice.shadow = None
-    lattice.poly = False
+    
     lattice.proj = np.array([[1., 0, 0], [0, 1, 0], [0, 0, 1]])
     if arg == "":
         pass
@@ -321,8 +263,6 @@ def hook0(lattice, arg):
                 lattice.logger.info("Flags: {0}".format(a))
                 if a == "shadow":
                     lattice.shadow = "#8881"
-                #elif a == "polygon":
-                #    lattice.poly = True
                 else:
                     assert False, "Wrong options."
     lattice.logger.info("Hook0: end.")
