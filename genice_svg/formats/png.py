@@ -3,57 +3,18 @@
 PNG, derived from SVG format rev. 2
 """
 
-import colorsys
+
+from math import sin, cos, pi
 import numpy as np
-import yaplotlib as yp
-from math import sin,cos, atan2,pi, exp
-import re
-import logging
 
-from countrings import countrings_nx as cr
-import networkx as nx
-import sys
-
-import render_png
-import hooks
+from genice_svg import hooks
+from genice_svg.render_png import Render
 
     
-
-
-    
-    
-
- 
-            
-def Normal(vs):
-    """
-    Normal vector (not normalized)
-    """
-    n = np.zeros(3)
-    for i in range(vs.shape[0]):
-        n += np.cross(vs[i-1], vs[i])
-    return n
-
-
-sun = np.array([-1.,-1.,2.])
-sun /= np.linalg.norm(sun)
-
-
-
-        
-# set of hue and saturation
-hue_sat = {3:(60., 0.8),
-           4:(120, 0.8), # yellow-green
-           5:(180, 0.5), # skyblue
-           6:(240, 0.5), # blue
-           7:(300, 0.8), #
-           8:(350, 0.5)} # red-purple
-
-
-
 def hook0(lattice, arg):
     lattice.logger.info("Hook0: ArgParser.")
-    lattice.renderer = render_png.Render
+    lattice.poly     = False # unavailable for PNG
+    lattice.renderer = Render
     lattice.shadow   = None
     lattice.oxygen   = 0.06 # absolute radius in nm
     lattice.HB       = 0.4  # radius relative to the oxygen
@@ -106,24 +67,15 @@ def hook0(lattice, arg):
                     lattice.shadow = "#8881"
                 elif a == "H":
                     lattice.hydrogen = 0.6
+                    lattice.HB = 0.2
                 elif a == "OH":
                     lattice.OH = 0.5
-                    lattice.HB = 0.4
                 else:
                     assert False, "Wrong options."
     lattice.logger.info("Hook0: end.")
 
 
 
-def main():
-    #print(atan2(sin(3),cos(3)))
-    image = Image.new("RGB", (1000,1000))
-    draw = ImageDraw.Draw(image, "RGBA")
-    cylinder(draw, np.array((20.,20.,20.)),np.array((100.,20.,100.)),15.)
-    image.save("test.png")
-    
-if __name__ == "__main__":
-    main()
 
 hooks = {0:hook0, 2:hooks.hook2, 6:hooks.hook6}
 

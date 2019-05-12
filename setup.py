@@ -42,11 +42,12 @@ setup(
             'png = genice_svg.formats.png:hook0',
         ],
         'genice_format_hook2': [
-            'svg = genice_svg.formats.svg:hook2',
-            'png = genice_svg.formats.png:hook2',
+            'svg = genice_svg.hooks:hook2',
+            'png = genice_svg.hooks:hook2',
         ],
         'genice_format_hook6': [
-            'png = genice_svg.formats.png:hook6',
+            'png = genice_svg.hooks:hook6',
+            'svg = genice_svg.hooks:hook6',
         ],
     },
     install_requires=['svgwrite', 'genice>=0.23', 'pillow'],

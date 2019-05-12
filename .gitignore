@@ -2,4 +2,9 @@
 *.pyc
 #*
 *~
+dist/
+build/
+*.egg-info/
+*.png
+*.svg
 

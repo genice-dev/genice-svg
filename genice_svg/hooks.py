@@ -1,14 +1,29 @@
 from collections import defaultdict
 
 import numpy as np
+import networkx as nx
 
-def clip_cyl(v1, r1, v2, r2):
+from countrings import countrings_nx as cr
+
+hue_sat = {3:(60., 0.8),
+           4:(120, 0.8), # yellow-green
+           5:(180, 0.5), # skyblue
+           6:(240, 0.5), # blue
+           7:(300, 0.8), #
+           8:(350, 0.5)} # red-purple
+
+
+
+
+def clip_cyl(v1, r1, v2, r2, rb):
+    r1c = (r1**2 - rb**2)**0.5
+    r2c = (r2**2 - rb**2)**0.5
     dv = v2 - v1
     Lv = np.linalg.norm(dv)
     if Lv < r1+r2:
         return None
-    newv1 = v1 + dv*r1/Lv
-    newv2 = v2 - dv*r2/Lv
+    newv1 = v1 + dv*r1c/Lv
+    newv2 = v2 - dv*r2c/Lv
     c = (newv1+newv2)/2
     d = newv2-c
     return [c, "L2", d]
@@ -64,35 +79,54 @@ def hook2(lattice):
     projected = np.dot(cellmat, lattice.proj)
     pos = lattice.reppositions
     prims = []
-    Rsphere = lattice.oxygen  # nm
-    Rcyl    = lattice.oxygen*lattice.HB # nm
+    RO   = lattice.oxygen  # nm
+    RHB  = lattice.oxygen*lattice.HB # nm
     xmin, xmax, ymin, ymax = draw_cell(prims, projected)
-    for i,j in lattice.graph.edges():
-        vi = pos[i]
-        d  = pos[j] - pos[i]
-        d -= np.floor(d+0.5)
-        clipped = clip_cyl(vi@projected, Rsphere, (vi+d)@projected, Rsphere)
-        if clipped is not None:
-            prims.append(clipped + [Rcyl, {"fill":"#fff"}]) # line
-        if np.linalg.norm(vi+d-pos[j]) > 0.01:
-            vj = pos[j]
-            d  = pos[i] - pos[j]
+    if lattice.poly:
+        for ring in cr.CountRings(nx.Graph(lattice.graph)).rings_iter(8):
+            nedges = len(ring)
+            deltas = np.zeros((nedges,3))
+            d2 = np.zeros(3)
+            for k,i in enumerate(ring):
+                d = lattice.reppositions[i] - lattice.reppositions[ring[0]]
+                d -= np.floor(d+0.5)
+                deltas[k] = d
+                dd = lattice.reppositions[ring[k]] - lattice.reppositions[ring[k-1]]
+                dd -= np.floor(dd+0.5)
+                d2 += dd
+            # d2 must be zeros
+            if np.all(np.absolute(d2) < 1e-5):
+                comofs = np.sum(deltas, axis=0) / len(ring)
+                deltas -= comofs
+                com = lattice.reppositions[ring[0]] + comofs
+                com -= np.floor(com)
+                # rel to abs
+                com    = np.dot(com,    projected)
+                deltas = np.dot(deltas, projected)
+                prims.append([com, "P", deltas, {"fillhs":hue_sat[nedges]}]) # line
+    else:
+        for i,j in lattice.graph.edges():
+            vi = pos[i]
+            d  = pos[j] - pos[i]
             d -= np.floor(d+0.5)
-            clipped = clip_cyl(vj@projected, Rsphere, (vj+d)@projected, Rsphere)
+            clipped = clip_cyl(vi@projected, RO, (vi+d)@projected, RO, RHB)
             if clipped is not None:
-                prims.append(clipped + [Rcyl, {"fill":"#fff"}]) # line
-
-    for i,v in enumerate(pos):
-        prims.append([np.dot(v, projected),"C",Rsphere, {}]) #circle
+                prims.append(clipped + [RHB, {"fill":"#fff"}]) # line
+            if np.linalg.norm(vi+d-pos[j]) > 0.01:
+                vj = pos[j]
+                d  = pos[i] - pos[j]
+                d -= np.floor(d+0.5)
+                clipped = clip_cyl(vj@projected, RO, (vj+d)@projected, RO, RHB)
+                if clipped is not None:
+                    prims.append(clipped + [RHB, {"fill":"#fff"}]) # line
+        for i,v in enumerate(pos):
+            prims.append([np.dot(v, projected),"C",RO, {}]) #circle
     xsize = xmax - xmin
     ysize = ymax - ymin
-    image = lattice.renderer(prims, Rsphere, shadow=lattice.shadow,
-                 topleft=np.array((xmin,ymin)),
-                 size=(xsize, ysize))
-    imgByteArr = io.BytesIO()
-    image.save(imgByteArr, format='PNG')
-    imgByteArr = imgByteArr.getvalue()
-    sys.stdout.buffer.write(imgByteArr)
+    lattice.renderer(prims, RO, shadow=lattice.shadow,
+                     topleft=np.array((xmin,ymin)),
+                     size=(xsize, ysize))
+    sys.exit(0)
     lattice.logger.info("Hook2: end.")
 
 
@@ -101,25 +135,29 @@ def hook6(lattice):
     if lattice.hydrogen == 0:
         # draw everything in hook2
         return 
-    lattice.logger.info("Hook6: A. Output atomic positions in PNG format.")
+    lattice.logger.info("Hook6: A. Output atomic positions in PNG/SVG format.")
 
     filloxygen = { "stroke_width": 1,
-                     "stroke": "#888",
-                     "fill": "#f88",
+                     "stroke": "#444",
+                     "fill": "#f00",
                      #"stroke_linejoin": "round",
                      #"stroke_linecap" : "round",
                      #"fill_opacity": 1.0,
     }
     fillhydrogen = { "stroke_width": 1,
-                     "stroke": "#888",
-                     "fill": "#8ff",
+                     "stroke": "#444",
+                     "fill": "#0ff",
                      #"stroke_linejoin": "round",
                      #"stroke_linecap" : "round",
                      #"fill_opacity": 1.0,
     }
     lineOH = { "stroke_width": 1,
-               "stroke": "#888",
+               "stroke": "#444",
                "fill": "#fff",
+               }
+    lineHB = { "stroke_width": 1,
+               "stroke": "#444",
+               "fill": "#ff0",
     }
     offset = np.zeros(3)
 
@@ -133,10 +171,10 @@ def hook6(lattice):
     
     # pos = lattice.reppositions
     prims = []
-    Rsphere = lattice.oxygen  # nm
-    Rcyl    = lattice.oxygen*lattice.HB       # nm
-    ROH     = lattice.oxygen*lattice.OH       # nm
-    RH      = lattice.oxygen*lattice.hydrogen # nm
+    RO   = lattice.oxygen  # nm
+    RHB  = lattice.oxygen*lattice.HB       # nm
+    ROH  = lattice.oxygen*lattice.OH       # nm
+    RH   = lattice.oxygen*lattice.hydrogen # nm
     waters = defaultdict(dict)
     xmin, xmax, ymin, ymax = draw_cell(prims, projected)
 
@@ -155,39 +193,37 @@ def hook6(lattice):
         O = water["O"]        
         H0 = water["H0"]        
         H1 = water["H1"]
-        prims.append([O  @ lattice.proj, "C", Rsphere, filloxygen]) #circle
+        prims.append([O  @ lattice.proj, "C", RO, filloxygen]) #circle
         prims.append([H0 @ lattice.proj, "C", RH, fillhydrogen]) #circle
         prims.append([H1 @ lattice.proj, "C", RH, fillhydrogen]) #circle
         # clipped cylinder
-        clipped = clip_cyl(O@lattice.proj, Rsphere, H0@lattice.proj, RH)
+        clipped = clip_cyl(O@lattice.proj, RO, H0@lattice.proj, RH, ROH)
         if clipped is not None:
             prims.append(clipped + [ROH, lineOH])
-        clipped = clip_cyl(O@lattice.proj, Rsphere, H1@lattice.proj, RH)
+        clipped = clip_cyl(O@lattice.proj, RO, H1@lattice.proj, RH, ROH)
         if clipped is not None:
             prims.append(clipped + [ROH, lineOH])
-    # for i,j in lattice.graph.edges():
-    #     vi = pos[i]
-    #     d  = pos[j] - pos[i]
-    #     d -= np.floor(d+0.5)
-    #     center = vi+d/2
-    #     dp = np.dot(d, projected)
-    #     o = dp / np.linalg.norm(dp)
-    #     o *= RR
-    #     prims.append([np.dot(center,projected), "L", np.dot(vi,projected)+o, np.dot(vi+d,projected)-o,Rcyl, {"fill":"#fff"}]) # line
-    #     if np.linalg.norm(vi+d-pos[j]) > 0.01:
-    #         vj = pos[j]
-    #         d  = pos[i] - pos[j]
-    #         d -= np.floor(d+0.5)
-    #         center = vj+d/2
-    #         dp = np.dot(d, projected)
-    #         o = dp / np.linalg.norm(dp)
-    #         o *= RR
-    #         prims.append([np.dot(center,projected), "L", np.dot(vj,projected)+o, np.dot(vj+d,projected)-o,Rcyl, {"fill":"#fff"}]) # line
-
-    #for i,v in enumerate(pos):
+    # draw HBs
+    for i,j in lattice.spacegraph.edges(data=False):
+        if i in waters and j in waters:  # edge may connect to the dopant
+            O = waters[j]["O"]
+            H0 = waters[i]["H0"]
+            H1 = waters[i]["H1"]
+            d0 = H0 - O
+            d1 = H1 - O
+            rr0 = d0 @ d0
+            rr1 = d1 @ d1
+            if rr0 < rr1 and rr0 < 0.245**2:
+                clipped = clip_cyl(O@lattice.proj, RO, H0@lattice.proj, RH, RHB)
+                if clipped is not None:
+                    prims.append(clipped + [RHB, lineHB])
+            if rr1 < rr0 and rr1 < 0.245**2:
+                clipped = clip_cyl(O@lattice.proj, RO, H1@lattice.proj, RH, RHB)
+                if clipped is not None:
+                    prims.append(clipped + [RHB, lineHB])
     xsize = xmax - xmin
     ysize = ymax - ymin
-    lattice.renderer(prims, Rsphere, shadow=lattice.shadow,
+    lattice.renderer(prims, RO, shadow=lattice.shadow,
                  topleft=np.array((xmin,ymin)),
                  size=(xsize, ysize))
     lattice.logger.info("Hook6: end.")
