@@ -25,7 +25,7 @@ def clip_cyl(v1, r1, v2, r2, rb):
     newv1 = v1 + dv*r1c/Lv
     newv2 = v2 - dv*r2c/Lv
     c = (newv1+newv2)/2
-    d = newv2-c
+    d = c-newv2
     return [c, "L2", d]
 
 
@@ -65,7 +65,7 @@ def draw_cell(prims, cellmat, origin=np.zeros(3)):
 
 
 def hook2(lattice):
-    if lattice.hydrogen > 0:
+    if lattice.hydrogen > 0 or lattice.arrows:
         # draw everything in hook6
         return 
     lattice.logger.info("Hook2: A. Output molecular positions in PNG/SVG format.")
@@ -132,7 +132,7 @@ def hook2(lattice):
 
 
 def hook6(lattice):
-    if lattice.hydrogen == 0:
+    if lattice.hydrogen == 0 and not lattice.arrows:
         # draw everything in hook2
         return 
     lattice.logger.info("Hook6: A. Output atomic positions in PNG/SVG format.")
@@ -159,6 +159,9 @@ def hook6(lattice):
                "stroke": "#444",
                "fill": "#ff0",
     }
+    arrow = { "stroke_width": 3,
+               "stroke": "#fff",
+    }
     offset = np.zeros(3)
 
     # Projection to the viewport
@@ -177,50 +180,68 @@ def hook6(lattice):
     RH   = lattice.oxygen*lattice.hydrogen # nm
     waters = defaultdict(dict)
     xmin, xmax, ymin, ymax = draw_cell(prims, projected)
+    if lattice.arrows:
+        pos = lattice.reppositions
+        for i,j in lattice.spacegraph.edges():
+            vi = pos[i]
+            d  = pos[j] - pos[i]
+            d -= np.floor(d+0.5)
+            clipped = clip_cyl(vi@projected, RO, (vi+d)@projected, RO, 0.0) #line
+            if clipped is not None:
+                prims.append(clipped + [0.0, {"stroke":"#fff"}]) # line
+            if np.linalg.norm(vi+d-pos[j]) > 0.01:
+                vj = pos[j]
+                d  = pos[i] - pos[j]
+                d -= np.floor(d+0.5)
+                clipped = clip_cyl((vj+d)@projected, RO, vj@projected, RO, 0.0)
+                if clipped is not None:
+                    prims.append(clipped + [0.0, {"stroke":"#fff"}]) # line
+        for i,v in enumerate(pos):
+            prims.append([np.dot(v, projected),"C",RO, {}]) #circle
+    else:
+        for atom in lattice.atoms:
+            resno, resname, atomname, position, order = atom
+            if "O" in atomname:
+                waters[order]["O"] = position
+            elif "H" in atomname:
+                if "H0" not in waters[order]:
+                    waters[order]["H0"] = position
+                else:
+                    waters[order]["H1"] = position
 
-    for atom in lattice.atoms:
-        resno, resname, atomname, position, order = atom
-        if "O" in atomname:
-            waters[order]["O"] = position
-        elif "H" in atomname:
-            if "H0" not in waters[order]:
-                waters[order]["H0"] = position
-            else:
-                waters[order]["H1"] = position
-    
-    # draw water molecules
-    for order, water in waters.items():
-        O = water["O"]        
-        H0 = water["H0"]        
-        H1 = water["H1"]
-        prims.append([O  @ lattice.proj, "C", RO, filloxygen]) #circle
-        prims.append([H0 @ lattice.proj, "C", RH, fillhydrogen]) #circle
-        prims.append([H1 @ lattice.proj, "C", RH, fillhydrogen]) #circle
-        # clipped cylinder
-        clipped = clip_cyl(O@lattice.proj, RO, H0@lattice.proj, RH, ROH)
-        if clipped is not None:
-            prims.append(clipped + [ROH, lineOH])
-        clipped = clip_cyl(O@lattice.proj, RO, H1@lattice.proj, RH, ROH)
-        if clipped is not None:
-            prims.append(clipped + [ROH, lineOH])
-    # draw HBs
-    for i,j in lattice.spacegraph.edges(data=False):
-        if i in waters and j in waters:  # edge may connect to the dopant
-            O = waters[j]["O"]
-            H0 = waters[i]["H0"]
-            H1 = waters[i]["H1"]
-            d0 = H0 - O
-            d1 = H1 - O
-            rr0 = d0 @ d0
-            rr1 = d1 @ d1
-            if rr0 < rr1 and rr0 < 0.245**2:
-                clipped = clip_cyl(O@lattice.proj, RO, H0@lattice.proj, RH, RHB)
-                if clipped is not None:
-                    prims.append(clipped + [RHB, lineHB])
-            if rr1 < rr0 and rr1 < 0.245**2:
-                clipped = clip_cyl(O@lattice.proj, RO, H1@lattice.proj, RH, RHB)
-                if clipped is not None:
-                    prims.append(clipped + [RHB, lineHB])
+        # draw water molecules
+        for order, water in waters.items():
+            O = water["O"]        
+            H0 = water["H0"]        
+            H1 = water["H1"]
+            prims.append([O  @ lattice.proj, "C", RO, filloxygen]) #circle
+            prims.append([H0 @ lattice.proj, "C", RH, fillhydrogen]) #circle
+            prims.append([H1 @ lattice.proj, "C", RH, fillhydrogen]) #circle
+            # clipped cylinder
+            clipped = clip_cyl(O@lattice.proj, RO, H0@lattice.proj, RH, ROH)
+            if clipped is not None:
+                prims.append(clipped + [ROH, lineOH])
+            clipped = clip_cyl(O@lattice.proj, RO, H1@lattice.proj, RH, ROH)
+            if clipped is not None:
+                prims.append(clipped + [ROH, lineOH])
+        # draw HBs
+        for i,j in lattice.spacegraph.edges(data=False):
+            if i in waters and j in waters:  # edge may connect to the dopant
+                O = waters[j]["O"]
+                H0 = waters[i]["H0"]
+                H1 = waters[i]["H1"]
+                d0 = H0 - O
+                d1 = H1 - O
+                rr0 = d0 @ d0
+                rr1 = d1 @ d1
+                if rr0 < rr1 and rr0 < 0.245**2:
+                    clipped = clip_cyl(O@lattice.proj, RO, H0@lattice.proj, RH, RHB)
+                    if clipped is not None:
+                        prims.append(clipped + [RHB, lineHB])
+                if rr1 < rr0 and rr1 < 0.245**2:
+                    clipped = clip_cyl(O@lattice.proj, RO, H1@lattice.proj, RH, RHB)
+                    if clipped is not None:
+                        prims.append(clipped + [RHB, lineHB])
     xsize = xmax - xmin
     ysize = ymax - ymin
     lattice.renderer(prims, RO, shadow=lattice.shadow,

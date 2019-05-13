@@ -50,6 +50,7 @@ def hook0(lattice, arg):
     lattice.HB       = 0.4  # radius relative to the oxygen
     lattice.OH       = 0.5  # radius relative to the oxygen
     lattice.hydrogen = 0    # radius relative to the oxygen
+    lattice.arrows   = False
     lattice.proj = np.array([[1., 0, 0], [0, 1, 0], [0, 0, 1]])
     if arg == "":
         pass
@@ -102,6 +103,8 @@ def hook0(lattice, arg):
                     lattice.HB = 0.2
                 elif a == "OH":
                     lattice.OH = 0.5
+                elif a == "arrows":
+                    lattice.arrows = True
                 else:
                     assert False, "Wrong options."
     lattice.logger.info("Hook0: end.")
