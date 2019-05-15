@@ -2,6 +2,7 @@ from collections import defaultdict
 
 import numpy as np
 import networkx as nx
+import sys
 
 from countrings import countrings_nx as cr
 
