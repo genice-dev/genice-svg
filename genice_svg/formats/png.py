@@ -20,6 +20,7 @@ def hook0(lattice, arg):
     lattice.HB       = 0.4  # radius relative to the oxygen
     lattice.OH       = 0.5  # radius relative to the oxygen
     lattice.hydrogen = 0    # radius relative to the oxygen
+    lattice.arrows   = False # always false for png
     lattice.proj = np.array([[1., 0, 0], [0, 1, 0], [0, 0, 1]])
     if arg == "":
         pass

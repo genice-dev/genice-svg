@@ -226,7 +226,7 @@ def hook6(lattice):
             if clipped is not None:
                 prims.append(clipped + [ROH, lineOH])
         # draw HBs
-        for i,j in lattice.spacegraph.edges(data=False):
+        for i,j,d in lattice.spacegraph.edges(data=True):
             if i in waters and j in waters:  # edge may connect to the dopant
                 O = waters[j]["O"]
                 H0 = waters[i]["H0"]
@@ -239,10 +239,12 @@ def hook6(lattice):
                     clipped = clip_cyl(O@lattice.proj, RO, H0@lattice.proj, RH, RHB)
                     if clipped is not None:
                         prims.append(clipped + [RHB, lineHB])
-                if rr1 < rr0 and rr1 < 0.245**2:
+                elif rr1 < rr0 and rr1 < 0.245**2:
                     clipped = clip_cyl(O@lattice.proj, RO, H1@lattice.proj, RH, RHB)
                     if clipped is not None:
                         prims.append(clipped + [RHB, lineHB])
+                else:
+                    lattice.logger.debug((np.linalg.norm(d['vector']),rr0,rr1,0.245**2))
     xsize = xmax - xmin
     ysize = ymax - ymin
     lattice.renderer(prims, RO, shadow=lattice.shadow,
