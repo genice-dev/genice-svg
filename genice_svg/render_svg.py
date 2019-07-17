@@ -83,9 +83,11 @@ def cylinder_new(svg, v1_, v2_, r, **options):
     group.add(u)
 
 
-def Render(prims, Rsphere, shadow=True, zoom=200, topleft=np.array([-1.,-1.]), size=(50.,50.)):
+def Render(prims, Rsphere, shadow=True, zoom=200, topleft=np.array([-1.,-1.]), size=(50.,50.), bgcolor=None):
     logger = logging.getLogger()
     svg = sw.Drawing(size=("{0}px".format(size[0]*zoom), "{0}px".format(size[1]*zoom)))
+    if bgcolor is not None:
+        svg.add(svg.rect(insert=(0, 0), size=("{0}px".format(size[0]*zoom), "{0}px".format(size[1]*zoom)), fill=bgcolor))
     TL0 = np.zeros(3)
     TL0[:2] = topleft
     shadows = []
@@ -155,6 +157,5 @@ def Render(prims, Rsphere, shadow=True, zoom=200, topleft=np.array([-1.,-1.]), s
         elif prim[1] == "CS":
             Rsphere = prim[2]
             options = { **shadowdefaults, **prim[3] }
-            # logger.info("{0}".format(options))
             svg.add(sw.shapes.Circle(center=(prim[0][:2]-topleft)*zoom, r=Rsphere*zoom, **options))
     print(svg.tostring(), end="")

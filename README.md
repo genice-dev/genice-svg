@@ -37,6 +37,7 @@ Copy the files in genice_svg/formats/ into your local formats folder of GenIce.
         rotatez=30
 		polygon        Draw polygons instead of a ball and stick model.
 		shadow         Draw shadows behind balls.
+		bg=#f00        Specify the background color.
 
 Png is a quick alternative for svg. Use png if making svg is too slow.
 
@@ -47,6 +48,7 @@ Png is a quick alternative for svg. Use png if making svg is too slow.
         rotatey=30
         rotatez=30
 		shadow         Draw shadows behind balls.
+		bg=#f00        Specify the background color.
 
 
 ## Test in place

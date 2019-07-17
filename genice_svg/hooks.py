@@ -126,8 +126,7 @@ def hook2(lattice):
     ysize = ymax - ymin
     lattice.renderer(prims, RO, shadow=lattice.shadow,
                      topleft=np.array((xmin,ymin)),
-                     size=(xsize, ysize))
-    sys.exit(0)
+                     size=(xsize, ysize), bgcolor=lattice.bgcolor)
     lattice.logger.info("Hook2: end.")
 
 
@@ -249,7 +248,7 @@ def hook6(lattice):
     ysize = ymax - ymin
     lattice.renderer(prims, RO, shadow=lattice.shadow,
                  topleft=np.array((xmin,ymin)),
-                 size=(xsize, ysize))
+                     size=(xsize, ysize), bgcolor=lattice.bgcolor)
     lattice.logger.info("Hook6: end.")
 
 

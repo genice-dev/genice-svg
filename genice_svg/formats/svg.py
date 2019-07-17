@@ -3,7 +3,7 @@
 PNG, derived from SVG format rev. 2
 """
 
-
+import re
 from math import pi, cos, sin
 
 import numpy as np
@@ -51,6 +51,7 @@ def hook0(lattice, arg):
     lattice.OH       = 0.5  # radius relative to the oxygen
     lattice.hydrogen = 0    # radius relative to the oxygen
     lattice.arrows   = False
+    lattice.bgcolor  = None
     lattice.proj = np.array([[1., 0, 0], [0, 1, 0], [0, 0, 1]])
     if arg == "":
         pass
@@ -92,6 +93,8 @@ def hook0(lattice, arg):
                     lattice.oxygen = float(value)
                 elif key == "OH":
                     lattice.OH = float(value)
+                elif key == "bg":
+                    lattice.bgcolor = value
             else:
                 lattice.logger.info("Flags: {0}".format(a))
                 if a == "shadow":
