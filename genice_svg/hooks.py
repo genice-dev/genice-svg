@@ -128,6 +128,9 @@ def hook2(lattice):
                      topleft=np.array((xmin,ymin)),
                      size=(xsize, ysize), bgcolor=lattice.bgcolor)
     lattice.logger.info("Hook2: end.")
+    if lattice.hydrogen == 0 and not lattice.arrows:
+        lattice.logger.info("Abort the following stages.")
+        return True # abort the following stages
 
 
 
