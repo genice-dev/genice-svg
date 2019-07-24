@@ -37,20 +37,12 @@ setup(
     ],
     
     entry_points = {
-        'genice_format_hook0': [
-            'svg = genice_svg.formats.svg:hook0',
-            'png = genice_svg.formats.png:hook0',
-        ],
-        'genice_format_hook2': [
-            'svg = genice_svg.hooks:hook2',
-            'png = genice_svg.hooks:hook2',
-        ],
-        'genice_format_hook6': [
-            'png = genice_svg.hooks:hook6',
-            'svg = genice_svg.hooks:hook6',
+        'genice_format': [
+            'svg = genice_svg.formats.svg',
+            'png = genice_svg.formats.png',
         ],
     },
-    install_requires=['svgwrite', 'genice>=0.23', 'pillow'],
+    install_requires=['svgwrite', 'genice>=0.25', 'pillow'],
 
     license='MIT',
 )

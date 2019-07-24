@@ -31,7 +31,7 @@ def hook0(lattice, arg):
         for a in args:
             if a.find("=") >= 0:
                 key, value = a.split("=")
-                lattice.logger.info("Option with arguments: {0} := {1}".format(key,value))
+                lattice.logger.info("  Option with arguments: {0} := {1}".format(key,value))
                 if key == "rotmat":
                     value = re.search(r"\[([-0-9,.]+)\]", value).group(1)
                     lattice.proj = np.array([float(x) for x in value.split(",")]).reshape(3,3)
@@ -66,7 +66,7 @@ def hook0(lattice, arg):
                 elif key == "bg":
                     lattice.bgcolor = value
             else:
-                lattice.logger.info("Flags: {0}".format(a))
+                lattice.logger.info("  Flags: {0}".format(a))
                 if a == "shadow":
                     lattice.shadow = "#8881"
                 elif a == "H":
@@ -75,7 +75,7 @@ def hook0(lattice, arg):
                 elif a == "OH":
                     lattice.OH = 0.5
                 else:
-                    assert False, "Wrong options."
+                    assert False, "  Wrong options."
     lattice.logger.info("Hook0: end.")
 
 
