@@ -1,6 +1,21 @@
 # coding: utf-8
 """
-PNG, derived from SVG format rev. 2
+GenIce format plugin to generate a PNG file.
+
+Usage:
+    % genice CS2 -r 3 3 3 -f svg[rotatex=30:shadow] > CS2.svg
+	
+Options:
+    rotatex=30
+    rotatey=30
+    rotatez=30
+    polygon        Draw polygons instead of a ball and stick model.
+    shadow         Draw shadows behind balls.
+    bg=#f00        Specify the background color.
+    H=0            Size of the hydrogen atom
+    O=0.06
+    HB=0.4
+    OH=0.5
 """
 
 import re
