@@ -15,10 +15,6 @@ version 0.4
 * genice>=0.25
 * pillow
 
-* [GenIce](https://github.com/vitroid/GenIce) >=0.23.
-* svgwrite.
-* Pillow.
-
 ## Installation from PyPI
 
     % pip install genice_svg

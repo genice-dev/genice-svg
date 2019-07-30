@@ -13,10 +13,6 @@ version %%version%%
 
 * %%requires%%
 
-* [GenIce](https://github.com/vitroid/GenIce) >=0.23.
-* svgwrite.
-* Pillow.
-
 ## Installation from PyPI
 
     % pip install %%package%%
