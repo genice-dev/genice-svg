@@ -17,6 +17,13 @@ Options:
     OH=0.5
 """
 
+
+desc = { "ref": {},
+         "brief": "PNG (Portable Network Graphics).",
+         "usage": __doc__,
+         }
+
+
 import re
 from math import sin, cos, pi
 import numpy as np

@@ -18,6 +18,13 @@ Options:
     OH=0.5
 """
 
+desc = { "ref": {},
+         "brief": "SVG (Standard Vector Graphics).",
+         "usage": __doc__,
+         }
+
+
+
 import re
 from math import pi, cos, sin
 
