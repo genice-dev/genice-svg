@@ -127,9 +127,22 @@ def hook2(lattice):
             prims.append([np.dot(v, projected),"C",RO, {}]) #circle
     xsize = xmax - xmin
     ysize = ymax - ymin
+    zoom = 200
+    if options.width > 0:
+        zoom = options.width / xsize
+        if options.height > 0:
+            z2 = options.height / ysize
+            if z2 < zoom:
+                zoom = z2
+                xsize = options.width/zoom
+            else:
+                ysize = options.height/zoom
+    elif options.height > 0:
+        zoom = options.height / ysize
+    logger.debug("Zoom {0} {1}x{2}".format(zoom, zoom*xsize, zoom*ysize))
     options.renderer(prims, RO, shadow=options.shadow,
                      topleft=np.array((xmin,ymin)),
-                     size=(xsize, ysize), bgcolor=options.bgcolor)
+                     size=(xsize, ysize), zoom=zoom, bgcolor=options.bgcolor)
     logger.info("Hook2: end.")
     if options.hydrogen == 0 and not options.arrows:
         logger.info("Abort the following stages.")

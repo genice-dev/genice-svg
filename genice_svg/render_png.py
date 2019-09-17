@@ -25,7 +25,7 @@ def Render(prims, Rsphere, shadow=None, topleft=np.array([-1.,-1.]), size=(50,50
     Vecs are vectors not needed to be sorted (used in "L" command)
     """
     logger = getLogger()
-    size = tuple((int(x*zoom) for x in size))
+    size = tuple((int(x*zoom+0.5) for x in size))
     image = Image.new("RGB", size, bgcolor)
     draw  = ImageDraw.Draw(image, "RGBA")
     # special treatment for post-K project

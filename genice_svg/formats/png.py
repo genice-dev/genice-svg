@@ -15,6 +15,8 @@ Options:
     O=0.06
     HB=0.4
     OH=0.5
+    width=0        (Pixel)
+    height=0       (Pixel)
 """
 
 
@@ -46,6 +48,8 @@ def hook0(lattice, arg):
     options.arrows   = False # always false for png
     options.bgcolor  = '#fff'
     options.proj = np.array([[1., 0, 0], [0, 1, 0], [0, 0, 1]])
+    options.width    = 0
+    options.height   = 0
     if arg == "":
         pass
         #This is default.  No reshaping applied.
@@ -88,6 +92,10 @@ def hook0(lattice, arg):
                     options.OH = float(value)
                 elif key == "bg":
                     options.bgcolor = value
+                elif key == "width":
+                    options.width = int(value)
+                elif key == "height":
+                    options.height = int(value)
             else:
                 logger.info("  Flags: {0}".format(a))
                 if a == "shadow":
