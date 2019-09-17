@@ -27,11 +27,13 @@ desc = { "ref": {},
 
 import re
 from math import pi, cos, sin
+from logging import getLogger
 
 import numpy as np
 
 from genice_svg import hooks
 from genice_svg.render_svg import Render
+from genice_svg.hooks import options
 
     
 
@@ -64,17 +66,18 @@ hue_sat = {3:(60., 0.8),
 
 
 def hook0(lattice, arg):
-    lattice.logger.info("Hook0: ArgParser.")
-    lattice.renderer = Render
-    lattice.poly     = False
-    lattice.shadow   = None
-    lattice.oxygen   = 0.06 # absolute radius in nm
-    lattice.HB       = 0.4  # radius relative to the oxygen
-    lattice.OH       = 0.5  # radius relative to the oxygen
-    lattice.hydrogen = 0    # radius relative to the oxygen
-    lattice.arrows   = False
-    lattice.bgcolor  = None
-    lattice.proj = np.array([[1., 0, 0], [0, 1, 0], [0, 0, 1]])
+    logger = getLogger()
+    logger.info("Hook0: ArgParser.")
+    options.renderer = Render
+    options.poly     = False
+    options.shadow   = None
+    options.oxygen   = 0.06 # absolute radius in nm
+    options.HB       = 0.4  # radius relative to the oxygen
+    options.OH       = 0.5  # radius relative to the oxygen
+    options.hydrogen = 0    # radius relative to the oxygen
+    options.arrows   = False
+    options.bgcolor  = None
+    options.proj = np.array([[1., 0, 0], [0, 1, 0], [0, 0, 1]])
     if arg == "":
         pass
         #This is default.  No reshaping applied.
@@ -83,56 +86,56 @@ def hook0(lattice, arg):
         for a in args:
             if a.find("=") >= 0:
                 key, value = a.split("=")
-                lattice.logger.info("  Option with arguments: {0} := {1}".format(key,value))
+                logger.info("  Option with arguments: {0} := {1}".format(key,value))
                 if key == "rotmat":
                     value = re.search(r"\[([-0-9,.]+)\]", value).group(1)
-                    lattice.proj = np.array([float(x) for x in value.split(",")]).reshape(3,3)
+                    options.proj = np.array([float(x) for x in value.split(",")]).reshape(3,3)
                 elif key == "rotatex":
                     value = float(value)*pi/180
                     cosx = cos(value)
                     sinx = sin(value)
                     R = np.array([[1, 0, 0], [0, cosx, sinx], [0,-sinx, cosx]])
-                    lattice.proj = np.dot(lattice.proj, R)
+                    options.proj = np.dot(options.proj, R)
                 elif key == "rotatey":
                     value = float(value)*pi/180
                     cosx = cos(value)
                     sinx = sin(value)
                     R = np.array([[cosx, 0, -sinx], [0, 1, 0], [sinx, 0, cosx]])
-                    lattice.proj = np.dot(lattice.proj, R)
+                    options.proj = np.dot(options.proj, R)
                 elif key == "rotatez":
                     value = float(value)*pi/180
                     cosx = cos(value)
                     sinx = sin(value)
                     R = np.array([[cosx, sinx, 0], [-sinx, cosx, 0], [0, 0, 1]])
-                    lattice.proj = np.dot(lattice.proj, R)
+                    options.proj = np.dot(options.proj, R)
                 elif key == "shadow":
-                    lattice.shadow = value
+                    options.shadow = value
                 elif key == "H":
-                    lattice.hydrogen = float(value)
+                    options.hydrogen = float(value)
                 elif key == "HB":
-                    lattice.HB = float(value)
+                    options.HB = float(value)
                 elif key == "O":
-                    lattice.oxygen = float(value)
+                    options.oxygen = float(value)
                 elif key == "OH":
-                    lattice.OH = float(value)
+                    options.OH = float(value)
                 elif key == "bg":
-                    lattice.bgcolor = value
+                    options.bgcolor = value
             else:
-                lattice.logger.info("  Flags: {0}".format(a))
+                logger.info("  Flags: {0}".format(a))
                 if a == "shadow":
-                    lattice.shadow = "#8881"
+                    options.shadow = "#8881"
                 elif a == "polygon":
-                    lattice.poly = True
+                    options.poly = True
                 elif a == "H":
-                    lattice.hydrogen = 0.6
-                    lattice.HB = 0.2
+                    options.hydrogen = 0.6
+                    options.HB = 0.2
                 elif a == "OH":
-                    lattice.OH = 0.5
+                    options.OH = 0.5
                 elif a == "arrows":
-                    lattice.arrows = True
+                    options.arrows = True
                 else:
                     assert False, "  Wrong options."
-    lattice.logger.info("Hook0: end.")
+    logger.info("Hook0: end.")
 
 
 

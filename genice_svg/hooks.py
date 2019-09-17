@@ -3,6 +3,8 @@ from collections import defaultdict
 import numpy as np
 import networkx as nx
 import sys
+from attrdict import AttrDict
+from logging import getLogger
 
 from countrings import countrings_nx as cr
 
@@ -13,7 +15,7 @@ hue_sat = {3:(60., 0.8),
            7:(300, 0.8), #
            8:(350, 0.5)} # red-purple
 
-
+options = AttrDict()
 
 
 def clip_cyl(v1, r1, v2, r2, rb):
@@ -66,24 +68,25 @@ def draw_cell(prims, cellmat, origin=np.zeros(3)):
 
 
 def hook2(lattice):
-    if lattice.hydrogen > 0 or lattice.arrows:
+    logger = getLogger()
+    if options.hydrogen > 0 or options.arrows:
         # draw everything in hook6
         return 
-    lattice.logger.info("Hook2: A. Output molecular positions in PNG/SVG format.")
+    logger.info("Hook2: A. Output molecular positions in PNG/SVG format.")
     offset = np.zeros(3)
 
     for i in range(3):
-        lattice.proj[i] /= np.linalg.norm(lattice.proj[i])
-    lattice.proj = np.linalg.inv(lattice.proj)
+        options.proj[i] /= np.linalg.norm(options.proj[i])
+    options.proj = np.linalg.inv(options.proj)
 
     cellmat = lattice.repcell.mat
-    projected = np.dot(cellmat, lattice.proj)
+    projected = np.dot(cellmat, options.proj)
     pos = lattice.reppositions
     prims = []
-    RO   = lattice.oxygen  # nm
-    RHB  = lattice.oxygen*lattice.HB # nm
+    RO   = options.oxygen  # nm
+    RHB  = options.oxygen*options.HB # nm
     xmin, xmax, ymin, ymax = draw_cell(prims, projected)
-    if lattice.poly:
+    if options.poly:
         for ring in cr.CountRings(nx.Graph(lattice.graph)).rings_iter(8):
             nedges = len(ring)
             deltas = np.zeros((nedges,3))
@@ -124,21 +127,22 @@ def hook2(lattice):
             prims.append([np.dot(v, projected),"C",RO, {}]) #circle
     xsize = xmax - xmin
     ysize = ymax - ymin
-    lattice.renderer(prims, RO, shadow=lattice.shadow,
+    options.renderer(prims, RO, shadow=options.shadow,
                      topleft=np.array((xmin,ymin)),
-                     size=(xsize, ysize), bgcolor=lattice.bgcolor)
-    lattice.logger.info("Hook2: end.")
-    if lattice.hydrogen == 0 and not lattice.arrows:
-        lattice.logger.info("Abort the following stages.")
+                     size=(xsize, ysize), bgcolor=options.bgcolor)
+    logger.info("Hook2: end.")
+    if options.hydrogen == 0 and not options.arrows:
+        logger.info("Abort the following stages.")
         return True # abort the following stages
 
 
 
 def hook6(lattice):
-    if lattice.hydrogen == 0 and not lattice.arrows:
+    logger = getLogger()
+    if options.hydrogen == 0 and not options.arrows:
         # draw everything in hook2
         return 
-    lattice.logger.info("Hook6: A. Output atomic positions in PNG/SVG format.")
+    logger.info("Hook6: A. Output atomic positions in PNG/SVG format.")
 
     filloxygen = { "stroke_width": 1,
                      "stroke": "#444",
@@ -169,21 +173,21 @@ def hook6(lattice):
 
     # Projection to the viewport
     for i in range(3):
-        lattice.proj[i] /= np.linalg.norm(lattice.proj[i])
-    lattice.proj = np.linalg.inv(lattice.proj)
+        options.proj[i] /= np.linalg.norm(options.proj[i])
+    options.proj = np.linalg.inv(options.proj)
 
     cellmat = lattice.repcell.mat
-    projected = np.dot(cellmat, lattice.proj)
+    projected = np.dot(cellmat, options.proj)
     
     # pos = lattice.reppositions
     prims = []
-    RO   = lattice.oxygen  # nm
-    RHB  = lattice.oxygen*lattice.HB       # nm
-    ROH  = lattice.oxygen*lattice.OH       # nm
-    RH   = lattice.oxygen*lattice.hydrogen # nm
+    RO   = options.oxygen  # nm
+    RHB  = options.oxygen*options.HB       # nm
+    ROH  = options.oxygen*options.OH       # nm
+    RH   = options.oxygen*options.hydrogen # nm
     waters = defaultdict(dict)
     xmin, xmax, ymin, ymax = draw_cell(prims, projected)
-    if lattice.arrows:
+    if options.arrows:
         pos = lattice.reppositions
         for i,j in lattice.spacegraph.edges():
             vi = pos[i]
@@ -202,7 +206,7 @@ def hook6(lattice):
         for i,v in enumerate(pos):
             prims.append([np.dot(v, projected),"C",RO, {}]) #circle
     else:
-        for atom in lattice.atoms:
+        for atom in options.atoms:
             resno, resname, atomname, position, order = atom
             if "O" in atomname:
                 waters[order]["O"] = position
@@ -217,14 +221,14 @@ def hook6(lattice):
             O = water["O"]        
             H0 = water["H0"]        
             H1 = water["H1"]
-            prims.append([O  @ lattice.proj, "C", RO, filloxygen]) #circle
-            prims.append([H0 @ lattice.proj, "C", RH, fillhydrogen]) #circle
-            prims.append([H1 @ lattice.proj, "C", RH, fillhydrogen]) #circle
+            prims.append([O  @ options.proj, "C", RO, filloxygen]) #circle
+            prims.append([H0 @ options.proj, "C", RH, fillhydrogen]) #circle
+            prims.append([H1 @ options.proj, "C", RH, fillhydrogen]) #circle
             # clipped cylinder
-            clipped = clip_cyl(O@lattice.proj, RO, H0@lattice.proj, RH, ROH)
+            clipped = clip_cyl(O@options.proj, RO, H0@options.proj, RH, ROH)
             if clipped is not None:
                 prims.append(clipped + [ROH, lineOH])
-            clipped = clip_cyl(O@lattice.proj, RO, H1@lattice.proj, RH, ROH)
+            clipped = clip_cyl(O@options.proj, RO, H1@options.proj, RH, ROH)
             if clipped is not None:
                 prims.append(clipped + [ROH, lineOH])
         # draw HBs
@@ -238,21 +242,21 @@ def hook6(lattice):
                 rr0 = d0 @ d0
                 rr1 = d1 @ d1
                 if rr0 < rr1 and rr0 < 0.245**2:
-                    clipped = clip_cyl(O@lattice.proj, RO, H0@lattice.proj, RH, RHB)
+                    clipped = clip_cyl(O@options.proj, RO, H0@options.proj, RH, RHB)
                     if clipped is not None:
                         prims.append(clipped + [RHB, lineHB])
                 elif rr1 < rr0 and rr1 < 0.245**2:
-                    clipped = clip_cyl(O@lattice.proj, RO, H1@lattice.proj, RH, RHB)
+                    clipped = clip_cyl(O@options.proj, RO, H1@options.proj, RH, RHB)
                     if clipped is not None:
                         prims.append(clipped + [RHB, lineHB])
                 else:
-                    lattice.logger.debug((np.linalg.norm(d['vector']),rr0,rr1,0.245**2))
+                    logger.debug((np.linalg.norm(d['vector']),rr0,rr1,0.245**2))
     xsize = xmax - xmin
     ysize = ymax - ymin
-    lattice.renderer(prims, RO, shadow=lattice.shadow,
+    options.renderer(prims, RO, shadow=options.shadow,
                  topleft=np.array((xmin,ymin)),
-                     size=(xsize, ysize), bgcolor=lattice.bgcolor)
-    lattice.logger.info("Hook6: end.")
+                     size=(xsize, ysize), bgcolor=options.bgcolor)
+    logger.info("Hook6: end.")
 
 
 # argparser
