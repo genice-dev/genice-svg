@@ -87,7 +87,7 @@ def hook2(lattice):
     RHB  = options.oxygen*options.HB # nm
     xmin, xmax, ymin, ymax = draw_cell(prims, projected)
     if options.poly:
-        for ring in cr.CountRings(nx.Graph(lattice.graph)).rings_iter(8):
+        for ring in cr.CountRings(nx.Graph(lattice.graph), pos=lattice.reppositions).rings_iter(8):
             nedges = len(ring)
             deltas = np.zeros((nedges,3))
             d2 = np.zeros(3)
@@ -95,19 +95,14 @@ def hook2(lattice):
                 d = lattice.reppositions[i] - lattice.reppositions[ring[0]]
                 d -= np.floor(d+0.5)
                 deltas[k] = d
-                dd = lattice.reppositions[ring[k]] - lattice.reppositions[ring[k-1]]
-                dd -= np.floor(dd+0.5)
-                d2 += dd
-            # d2 must be zeros
-            if np.all(np.absolute(d2) < 1e-5):
-                comofs = np.sum(deltas, axis=0) / len(ring)
-                deltas -= comofs
-                com = lattice.reppositions[ring[0]] + comofs
-                com -= np.floor(com)
-                # rel to abs
-                com    = np.dot(com,    projected)
-                deltas = np.dot(deltas, projected)
-                prims.append([com, "P", deltas, {"fillhs":hue_sat[nedges]}]) # line
+            comofs = np.sum(deltas, axis=0) / len(ring)
+            deltas -= comofs
+            com = lattice.reppositions[ring[0]] + comofs
+            com -= np.floor(com)
+            # rel to abs
+            com    = np.dot(com,    projected)
+            deltas = np.dot(deltas, projected)
+            prims.append([com, "P", deltas, {"fillhs":hue_sat[nedges]}]) # line
     else:
         for i,j in lattice.graph.edges():
             vi = pos[i]
@@ -135,8 +130,12 @@ def hook2(lattice):
             if z2 < zoom:
                 zoom = z2
                 xsize = options.width/zoom
+                xcenter = (xmax+xmin)/2
+                xmin, xmax = xcenter-xsize/2, xcenter+xsize/2
             else:
                 ysize = options.height/zoom
+                ycenter = (ymax+ymin)/2
+                ymin, ymax = ycenter-ysize/2, ycenter+ysize/2
     elif options.height > 0:
         zoom = options.height / ysize
     logger.debug("Zoom {0} {1}x{2}".format(zoom, zoom*xsize, zoom*ysize))
