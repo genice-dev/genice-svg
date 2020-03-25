@@ -7,13 +7,16 @@
 
 A [GenIce](https://github.com/vitroid/GenIce) plugin to illustrate the structure in SVG (and PNG) format.
 
-version 0.4
+version 0.5
 
 ## Requirements
 
 * svgwrite
 * genice>=0.25
 * pillow
+* attrdict
+* countrings>=0.1.7
+* jinja2
 
 ## Installation from PyPI
 
@@ -30,8 +33,7 @@ version 0.4
 Copy the files in genice_svg/formats/ into your local formats/ folder.
 
 ## Usage
-
-    
+        
     Usage:
         % genice CS2 -r 3 3 3 -f svg[rotatex=30:shadow] > CS2.svg
     	
@@ -46,10 +48,11 @@ Copy the files in genice_svg/formats/ into your local formats/ folder.
         O=0.06
         HB=0.4
         OH=0.5
+        width=0        (Pixel)
+        height=0       (Pixel)
 
 Png is a quick alternative for svg. Use png if making svg is too slow.
-
-    
+        
     Usage:
         % genice CS2 -r 3 3 3 -f png[shadow:bg=#f00] > CS2.png
     	
@@ -63,6 +66,8 @@ Png is a quick alternative for svg. Use png if making svg is too slow.
         O=0.06
         HB=0.4
         OH=0.5
+        width=0        (Pixel)
+        height=0       (Pixel)
 
 ## Test in place
 
