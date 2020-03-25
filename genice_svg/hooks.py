@@ -71,7 +71,7 @@ def hook2(lattice):
     logger = getLogger()
     if options.hydrogen > 0 or options.arrows:
         # draw everything in hook6
-        return 
+        return
     logger.info("Hook2: A. Output molecular positions in PNG/SVG format.")
     offset = np.zeros(3)
 
@@ -153,7 +153,7 @@ def hook6(lattice):
     logger = getLogger()
     if options.hydrogen == 0 and not options.arrows:
         # draw everything in hook2
-        return 
+        return
     logger.info("Hook6: A. Output atomic positions in PNG/SVG format.")
 
     filloxygen = { "stroke_width": 1,
@@ -190,7 +190,7 @@ def hook6(lattice):
 
     cellmat = lattice.repcell.mat
     projected = np.dot(cellmat, options.proj)
-    
+
     # pos = lattice.reppositions
     prims = []
     RO   = options.oxygen  # nm
@@ -218,7 +218,7 @@ def hook6(lattice):
         for i,v in enumerate(pos):
             prims.append([np.dot(v, projected),"C",RO, {}]) #circle
     else:
-        for atom in options.atoms:
+        for atom in lattice.atoms:
             resno, resname, atomname, position, order = atom
             if "O" in atomname:
                 waters[order]["O"] = position
@@ -230,8 +230,8 @@ def hook6(lattice):
 
         # draw water molecules
         for order, water in waters.items():
-            O = water["O"]        
-            H0 = water["H0"]        
+            O = water["O"]
+            H0 = water["H0"]
             H1 = water["H1"]
             prims.append([O  @ options.proj, "C", RO, filloxygen]) #circle
             prims.append([H0 @ options.proj, "C", RH, fillhydrogen]) #circle
@@ -275,4 +275,3 @@ def hook6(lattice):
 
 #New standard style of options for the plugins:
 #svg2[rotmat=[]:other=True:...]
-

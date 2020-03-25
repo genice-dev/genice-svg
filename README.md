@@ -16,6 +16,7 @@ version 0.5
 * pillow
 * attrdict
 * countrings>=0.1.7
+* jinja2
 
 ## Installation from PyPI
 
