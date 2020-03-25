@@ -12,7 +12,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 with codecs.open(os.path.join(os.path.dirname(__file__), 'genice_svg', '__init__.py'),
                  encoding='utf8') as version_file:
     metadata = dict(re.findall(r"""__([a-z]+)__ = "([^"]+)""", version_file.read()))
-    
+
 long_desc = "".join(open("README.md").readlines())
 
 setup(
@@ -35,14 +35,15 @@ setup(
     packages=['genice_svg',
               'genice_svg.formats',
     ],
-    
+
     entry_points = {
         'genice_format': [
             'svg = genice_svg.formats.svg',
             'png = genice_svg.formats.png',
         ],
     },
-    install_requires=['svgwrite', 'genice>=0.25', 'pillow', 'attrdict', 'countrings>=0.1.7', 'jinja2'],
+    install_requires=['svgwrite', 'genice>=0.25', 'pillow', 'attrdict',
+                      'countrings>=0.1.7', 'jinja2'],
 
     license='MIT',
 )

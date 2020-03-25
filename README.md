@@ -7,7 +7,7 @@
 
 A [GenIce](https://github.com/vitroid/GenIce) plugin to illustrate the structure in SVG (and PNG) format.
 
-version 0.5
+version 0.6
 
 ## Requirements
 

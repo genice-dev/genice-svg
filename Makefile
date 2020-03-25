@@ -2,7 +2,7 @@
 
 all: README.md
 
-%: temp_% replacer.py genice_svg/formats/svg.py genice_svg/formats/png.py
+%: temp_% replacer.py genice_svg/__init__.py genice_svg/formats/svg.py genice_svg/formats/png.py
 	python replacer.py < $< > $@
 
 test: iceT2.svg.test CS2.svg iceR.svg CS2.png 4R.png
