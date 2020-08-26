@@ -16,7 +16,7 @@ with codecs.open(os.path.join(os.path.dirname(__file__), 'genice_svg', '__init__
 long_desc = "".join(open("README.md").readlines())
 
 setup(
-    name='genice_svg',
+    name='genice2_svg',
     version=metadata['version'],
     description='SVG format plugin for GenIce.',
     long_description=long_desc,
@@ -42,7 +42,7 @@ setup(
             'png = genice_svg.formats.png',
         ],
     },
-    install_requires=['svgwrite', 'genice>=0.25', 'pillow', 'attrdict',
+    install_requires=['svgwrite', 'genice2', 'pillow',
                       'countrings>=0.1.7', 'jinja2'],
 
     license='MIT',

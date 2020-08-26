@@ -16,7 +16,7 @@ def cylinder(draw, v1_, v2_, r, **options):
               width=int(r*2), fill=options["fill"])
 
 
-def Render(prims, Rsphere, shadow=None, topleft=np.array([-1.,-1.]), size=(50,50), zoom=200, vertices=None, vecs=None, bgcolor='#fff'):
+def Render(prims, Rsphere, shadow=None, topleft=np.array([-1.,-1.]), size=(50,50), zoom=200, vertices=None, vecs=None, bgcolor='#fff', encode=True):
     """
     Renter the image in PNG format and output to the stdout.
     Returns nothing.
@@ -31,7 +31,7 @@ def Render(prims, Rsphere, shadow=None, topleft=np.array([-1.,-1.]), size=(50,50
     # special treatment for post-K project
     # draw.rectangle([0,0,size[0]/2,size[1]], fill="#EF5FA7")
     # draw.rectangle([size[0]/2,0,size[0],size[1]], fill="#00A2FF")
-    
+
     TL0 = np.zeros(3)
     TL0[:2] = topleft
     linedefaults = { "stroke_width": 2,
@@ -98,9 +98,12 @@ def Render(prims, Rsphere, shadow=None, topleft=np.array([-1.,-1.]), size=(50,50
             r=Rsphere*zoom
             tl = center-r
             br = center+r
-            
+
             draw.ellipse([int(x) for x in [tl[0], tl[1], br[0], br[1]]], fill=options["fill"])
-    imgByteArr = io.BytesIO()
-    image.save(imgByteArr, format='PNG')
-    imgByteArr = imgByteArr.getvalue()
-    sys.stdout.buffer.write(imgByteArr)
+    if encode:
+        imgByteArr = io.BytesIO()
+        image.save(imgByteArr, format='PNG')
+        imgByteArr = imgByteArr.getvalue()
+        return imgByteArr
+    else:
+        return image
