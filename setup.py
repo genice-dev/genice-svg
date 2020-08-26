@@ -42,7 +42,7 @@ setup(
             'png = genice_svg.formats.png',
         ],
     },
-    install_requires=['svgwrite', 'genice>=0.25', 'pillow', 'attrdict',
+    install_requires=['svgwrite', 'genice<2.0', 'pillow', 'attrdict',
                       'countrings>=0.1.7', 'jinja2'],
 
     license='MIT',
