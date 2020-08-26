@@ -5,7 +5,6 @@ import io
 import numpy as np
 import PIL.ImageDraw as ImageDraw
 import PIL.Image as Image
-from genice_svg.hooks import options
 
 def cylinder(draw, v1_, v2_, r, **options):
     """

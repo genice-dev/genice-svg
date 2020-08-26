@@ -16,7 +16,7 @@ with codecs.open(os.path.join(os.path.dirname(__file__), 'genice_svg', '__init__
 long_desc = "".join(open("README.md").readlines())
 
 setup(
-    name='genice2_svg',
+    name='GenIce2 SVG plugin',
     version=metadata['version'],
     description='SVG format plugin for GenIce.',
     long_description=long_desc,
