@@ -34,6 +34,7 @@ from logging import getLogger
 import numpy as np
 
 from genice_svg.render_svg import Render
+import genice2.formats
 
 
 def Normal(vs):
@@ -109,8 +110,7 @@ def draw_cell(prims, cellmat, origin=np.zeros(3)):
     return np.min(corners[:,0]), np.max(corners[:,0]), np.min(corners[:,1]), np.max(corners[:,1])
 
 
-import genice.formats
-class Format(genice.formats.Format):
+class Format(genice2.formats.Format):
     def hooks(self):
         return {2:self.hook2, 6:self.hook6}
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # from distutils.core import setup, Extension
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_packages
 import os
 import codecs
 import re
@@ -32,9 +32,7 @@ setup(
     url='https://github.com/vitroid/genice-svg/',
     keywords=['genice', 'SVG'],
 
-    packages=['genice_svg',
-              'genice_svg.formats',
-    ],
+    packages=find_packages(),
 
     entry_points = {
         'genice_format': [
