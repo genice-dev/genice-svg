@@ -1,4 +1,4 @@
-import logging
+from logging import getLogger
 from math import atan2, exp, pi
 import colorsys
 
@@ -63,6 +63,7 @@ def cylinder_new(svg, v1_, v2_, r, **options):
     """
     draw a 3D cylinder
     """
+    logger = getLogger()
     group = svg.add( svg.g( id='Cylinder') )
     if v1_[2] > v2_[2]:
         v1, v2 = v2_, v1_
@@ -85,7 +86,7 @@ def cylinder_new(svg, v1_, v2_, r, **options):
 
 def Render(prims, Rsphere, shadow=True, zoom=200, topleft=np.array([-1.,-1.]), size=(50.,50.), bgcolor=None, encode=False):
     # encode is dummy parameter.
-    logger = logging.getLogger()
+    logger = getLogger()
     svg = sw.Drawing(size=("{0}px".format(size[0]*zoom), "{0}px".format(size[1]*zoom)))
     if bgcolor is not None:
         svg.add(svg.rect(insert=(0, 0), size=("{0}px".format(size[0]*zoom), "{0}px".format(size[1]*zoom)), fill=bgcolor))

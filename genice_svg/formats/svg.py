@@ -12,10 +12,10 @@ Options:
     polygon        Draw polygons instead of a ball and stick model.
     shadow         Draw shadows behind balls.
     bg=#f00        Specify the background color.
-    H=0            Size of the hydrogen atom
     O=0.06
-    HB=0.4
-    OH=0.5
+    H=0            Size of the hydrogen atom (relative to that of oxygen)
+    HB=0.4         Radius of HB relative to that of oxygem
+    OH=0.5         Radius of OH colvalent bond relative to that of oxygem
     width=0        (Pixel)
     height=0       (Pixel)
 """
@@ -30,6 +30,7 @@ desc = { "ref": {},
 import re
 from math import pi, cos, sin
 from logging import getLogger
+from collections import defaultdict
 
 import numpy as np
 
