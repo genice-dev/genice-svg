@@ -10,7 +10,7 @@ Options:
     rotatey=30
     rotatez=30
     polygon        Draw polygons instead of a ball and stick model.
-    shadow         Draw shadows behind balls.
+    shadow=#8881   Draw shadows behind balls.
     bg=#f00        Specify the background color.
     O=0.06
     H=0            Size of the hydrogen atom (relative to that of oxygen)
@@ -36,6 +36,7 @@ import numpy as np
 
 from genice_svg.render_svg import Render
 import genice2.formats
+from genice2.decorators import timeit, banner
 
 
 def Normal(vs):
@@ -113,11 +114,13 @@ def draw_cell(prims, cellmat, origin=np.zeros(3)):
 
 class Format(genice2.formats.Format):
     def hooks(self):
-        return {2:self.hook2, 6:self.hook6}
+        return {2:self.Hook2, 6:self.Hook6}
 
+    @timeit
+    @banner
     def __init__(self, **kwargs):
+        "ArgParser (svg)."
         logger = getLogger()
-        logger.info("Hook0: ArgParser (svg).")
         self.renderer = Render
         self.encode   = True # valid for png.
         self.poly     = False
@@ -155,15 +158,25 @@ class Format(genice2.formats.Format):
                 R = np.array([[cosx, sinx, 0], [-sinx, cosx, 0], [0, 0, 1]])
                 self.proj = np.dot(self.proj, R)
             elif key == "shadow":
-                self.shadow = value
+                if value is True:
+                    self.shadow = "#8881"
+                else:
+                    self.shadow = value
             elif key == "H":
-                self.hydrogen = float(value)
+                if value is True:
+                    self.hydrogen = 0.6
+                    self.HB = 0.2
+                else:
+                    self.hydrogen = float(value)
             elif key == "HB":
                 self.HB = float(value)
             elif key == "O":
                 self.oxygen = float(value)
             elif key == "OH":
-                self.OH = float(value)
+                if value is True:
+                    self.OH = 0.5
+                else:
+                    self.OH = float(value)
             elif key == "bg":
                 self.bgcolor = value
             elif key == "width":
@@ -175,28 +188,23 @@ class Format(genice2.formats.Format):
             elif value is True:
                 a = key
                 logger.info("  Flags: {0}".format(a))
-                if a == "shadow":
-                    self.shadow = "#8881"
-                elif a == "polygon":
+                if a == "polygon":
                     self.poly = True
-                elif a == "H":
-                    self.hydrogen = 0.6
-                    self.HB = 0.2
-                elif a == "OH":
-                    self.OH = 0.5
                 elif a == "arrows":
                     self.arrows = True
                 else:
                     assert False, "  Wrong options."
-        logger.info("Hook0: end.")
+            else:
+                assert False, "  Wrong options."
 
-
-    def hook2(self, lattice):
+    @timeit
+    @banner
+    def Hook2(self, lattice):
+        "A. Output molecular positions in PNG/SVG format."
         logger = getLogger()
         if self.hydrogen > 0 or self.arrows:
             # draw everything in hook6
             return
-        logger.info("Hook2: A. Output molecular positions in PNG/SVG format.")
         offset = np.zeros(3)
 
         for i in range(3):
@@ -270,19 +278,20 @@ class Format(genice2.formats.Format):
                                     zoom=zoom,
                                     bgcolor=self.bgcolor,
                                     encode=self.encode)
-        logger.info("Hook2: end.")
         if self.hydrogen == 0 and not self.arrows:
             logger.info("Abort the following stages.")
             return True # abort the following stages
 
 
 
-    def hook6(self, lattice):
+    @timeit
+    @banner
+    def Hook6(self, lattice):
+        "A. Output atomic positions in PNG/SVG format."
         logger = getLogger()
         if self.hydrogen == 0 and not self.arrows:
             # draw everything in hook2
             return
-        logger.info("Hook6: A. Output atomic positions in PNG/SVG format.")
 
         filloxygen = { "stroke_width": 1,
                          "stroke": "#444",
@@ -399,4 +408,3 @@ class Format(genice2.formats.Format):
                                     size=(xsize, ysize),
                                     bgcolor=self.bgcolor,
                                     encode=self.encode)
-        logger.info("Hook6: end.")

@@ -84,7 +84,7 @@ def cylinder_new(svg, v1_, v2_, r, **options):
     group.add(u)
 
 
-def Render(prims, Rsphere, shadow=True, zoom=200, topleft=np.array([-1.,-1.]), size=(50.,50.), bgcolor=None, encode=False):
+def Render(prims, Rsphere, shadow=None, zoom=200, topleft=np.array([-1.,-1.]), size=(50.,50.), bgcolor=None, encode=False):
     # encode is dummy parameter.
     logger = getLogger()
     svg = sw.Drawing(size=("{0}px".format(size[0]*zoom), "{0}px".format(size[1]*zoom)))
@@ -110,6 +110,13 @@ def Render(prims, Rsphere, shadow=True, zoom=200, topleft=np.array([-1.,-1.]), s
                        "fill_opacity": 0.08,
     }
     if shadow is not None:
+        assert shadow[0] == '#' and len(shadow) in (5,9)
+        if len(shadow) == 5:
+            shadowdefaults["fill"] = shadow[:4]
+            shadowdefaults["fill_opacity"] = int(shadow[4],16) / 15
+        else:
+            shadowdefaults["fill"] = shadow[:7]
+            shadowdefaults["fill_opacity"] = int(shadow[7:],16) / 255
         r = Rsphere
         Z = np.array([0,0,1.0])
         prims += [[prim[0] - Z*r*1.4**j, prim[1]+'S', r*1.4**j, {}]
