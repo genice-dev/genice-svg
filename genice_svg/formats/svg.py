@@ -113,6 +113,25 @@ def draw_cell(prims, cellmat, origin=np.zeros(3)):
 
 
 class Format(genice2.formats.Format):
+    """
+    Format into a SVG file.
+
+    Options:
+        rotatex=30
+        rotatey=30
+        rotatez=30
+        polygon=True   Draw polygons instead of a ball and stick model.
+        arrows=True    Draw the hydrogen bonds with arrows.
+        shadow="#8881" Draw shadows behind balls with the specified color.
+        shadow=True    Draw shadows behind balls with the default color.
+        bg="#f00"      Specify the background color.
+        O=0.06
+        H=0            Size of the hydrogen atom (relative to that of oxygen)
+        HB=0.4         Radius of HB relative to that of oxygem
+        OH=0.5         Radius of OH colvalent bond relative to that of oxygem
+        width=0        (Pixel)
+        height=0       (Pixel)
+    """
     def hooks(self):
         return {2:self.Hook2, 6:self.Hook6}
 

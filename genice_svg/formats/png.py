@@ -17,6 +17,7 @@ Options:
     OH=0.5
     width=0        (Pixel)
     height=0       (Pixel)
+    encode=True    Encode into PNG or return as a bitmap.
 """
 
 
@@ -35,6 +36,24 @@ from genice_svg.render_png import Render
 
 import genice_svg.formats.svg
 class Format(genice_svg.formats.svg.Format):
+    """
+    Format into a PNG file.
+
+    Options:
+        rotatex=30
+        rotatey=30
+        rotatez=30
+        polygon        Draw polygons instead of a ball and stick model.
+        shadow=#8881   Draw shadows behind balls.
+        bg=#f00        Specify the background color.
+        O=0.06
+        H=0            Size of the hydrogen atom (relative to that of oxygen)
+        HB=0.4         Radius of HB relative to that of oxygem
+        OH=0.5         Radius of OH colvalent bond relative to that of oxygem
+        width=0        (Pixel)
+        height=0       (Pixel)
+        encode=True    Encode into PNG or return as a bitmap.
+    """
     def __init__(self, **kwargs):
         logger = getLogger()
         super().__init__(**kwargs)
