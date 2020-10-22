@@ -1,6 +1,6 @@
 # coding: utf-8
 """
-GenIce format plugin to generate a PNG file.
+GenIce format plugin to generate a SVG file.
 
 Usage:
     % genice CS2 -r 3 3 3 -f svg[rotatex=30:shadow] > CS2.svg
@@ -10,6 +10,7 @@ Options:
     rotatey=30
     rotatez=30
     polygon        Draw polygons instead of a ball and stick model.
+    arrows         Draw the hydrogen bonds with arrows.
     shadow=#8881   Draw shadows behind balls.
     bg=#f00        Specify the background color.
     O=0.06
@@ -114,7 +115,7 @@ def draw_cell(prims, cellmat, origin=np.zeros(3)):
 
 class Format(genice2.formats.Format):
     """
-    Format into a SVG file.
+    Format an ice structure into a SVG file.
 
     Options:
         rotatex=30

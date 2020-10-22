@@ -11,13 +11,12 @@ Options:
     rotatez=30
     shadow         Draw shadows behind balls.
     bg=#f00        Specify the background color.
-    H=0            Size of the hydrogen atom
-    O=0.06
-    HB=0.4
-    OH=0.5
+    H=0            Size of the hydrogen atom (relative to that of oxygen)
+    O=0.06         Size of the oxygen atom in nm.
+    HB=0.4         Radius of HB relative to that of oxygen
+    OH=0.5         Radius of OH colvalent bond relative to that of oxygen
     width=0        (Pixel)
     height=0       (Pixel)
-    encode=True    Encode into PNG or return as a bitmap.
 """
 
 
@@ -37,19 +36,18 @@ from genice_svg.render_png import Render
 import genice_svg.formats.svg
 class Format(genice_svg.formats.svg.Format):
     """
-    Format into a PNG file.
+    Format an ice structure into a PNG file.
 
     Options:
         rotatex=30
         rotatey=30
         rotatez=30
-        polygon        Draw polygons instead of a ball and stick model.
         shadow=#8881   Draw shadows behind balls.
         bg=#f00        Specify the background color.
-        O=0.06
+        O=0.06         Size of the oxygen atom in nm.
         H=0            Size of the hydrogen atom (relative to that of oxygen)
-        HB=0.4         Radius of HB relative to that of oxygem
-        OH=0.5         Radius of OH colvalent bond relative to that of oxygem
+        HB=0.4         Radius of HB relative to that of oxygen
+        OH=0.5         Radius of OH colvalent bond relative to that of oxygen
         width=0        (Pixel)
         height=0       (Pixel)
         encode=True    Encode into PNG or return as a bitmap.
