@@ -1,53 +1,58 @@
 <img src="4R.png">
 
-    genice 4R -f png[shadow:rotatex=2:rotatey=88] > 4R.png
+    genice2 4R -f png[shadow:rotatex=2:rotatey=88] > 4R.png
 
 
-# [genice-svg](https://github.com/vitroid/genice-svg/)
+# [genice2-svg](https://github.com/vitroid/genice-svg/)
 
-A [GenIce](https://github.com/vitroid/GenIce) plugin to illustrate the structure in SVG (and PNG) format.
+A [GenIce2](https://github.com/vitroid/GenIce) plugin to illustrate the structure in SVG (and PNG) format.
 
-version 0.6
+version 0.8
 
 ## Requirements
 
+
 * svgwrite
-* genice>=0.25
+* genice2
 * pillow
-* attrdict
 * countrings>=0.1.7
 * jinja2
 
 ## Installation from PyPI
 
-    % pip install genice_svg
+```shell
+% pip install genice2-svg
+```
 
 ## Manual Installation
 
 ### System-wide installation
 
-    % make install
+```shell
+% make install
+```
 
 ### Private installation
 
-Copy the files in genice_svg/formats/ into your local formats/ folder.
+Copy the files in genice2_svg/formats/ into your local formats/ folder.
 
 ## Usage
         
     Usage:
         % genice CS2 -r 3 3 3 -f svg[rotatex=30:shadow] > CS2.svg
-    	
+
     Options:
         rotatex=30
         rotatey=30
         rotatez=30
         polygon        Draw polygons instead of a ball and stick model.
-        shadow         Draw shadows behind balls.
+        arrows         Draw the hydrogen bonds with arrows.
+        shadow=#8881   Draw shadows behind balls.
         bg=#f00        Specify the background color.
-        H=0            Size of the hydrogen atom
         O=0.06
-        HB=0.4
-        OH=0.5
+        H=0            Size of the hydrogen atom (relative to that of oxygen)
+        HB=0.4         Radius of HB relative to that of oxygem
+        OH=0.5         Radius of OH colvalent bond relative to that of oxygem
         width=0        (Pixel)
         height=0       (Pixel)
 
@@ -55,20 +60,22 @@ Png is a quick alternative for svg. Use png if making svg is too slow.
         
     Usage:
         % genice CS2 -r 3 3 3 -f png[shadow:bg=#f00] > CS2.png
-    	
+
     Options:
         rotatex=30
         rotatey=30
         rotatez=30
         shadow         Draw shadows behind balls.
         bg=#f00        Specify the background color.
-        H=0            Size of the hydrogen atom
-        O=0.06
-        HB=0.4
-        OH=0.5
+        H=0            Size of the hydrogen atom (relative to that of oxygen)
+        O=0.06         Size of the oxygen atom in nm.
+        HB=0.4         Radius of HB relative to that of oxygen
+        OH=0.5         Radius of OH colvalent bond relative to that of oxygen
         width=0        (Pixel)
         height=0       (Pixel)
 
 ## Test in place
 
-    % make test
+```shell
+% make test
+```

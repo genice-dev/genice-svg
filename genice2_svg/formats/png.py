@@ -31,10 +31,10 @@ from math import sin, cos, pi
 import numpy as np
 from logging import getLogger
 
-from genice_svg.render_png import Render
+from genice2_svg.render_png import Render
 
-import genice_svg.formats.svg
-class Format(genice_svg.formats.svg.Format):
+import genice2_svg.formats.svg
+class Format(genice2_svg.formats.svg.Format):
     """
     Format an ice structure into a PNG file.
 

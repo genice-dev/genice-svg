@@ -1,40 +1,49 @@
 .DELETE_ON_ERROR:
+GENICE=genice2
+BASE=genice2_svg
+PACKAGE=genice2-svg
 
 all: README.md
 
-%: temp_% replacer.py genice_svg/__init__.py genice_svg/formats/svg.py genice_svg/formats/png.py
-	python replacer.py < $< > $@
 
 test: iceT2.svg.test CS2.svg iceR.svg CS2.png 4R.png
-iceT2.svg: genice_svg/formats/svg.py Makefile
-	genice iceT2 -f svg[shadow] > $@
-CS2.svg: genice_svg/formats/svg.py Makefile
-	genice CS2 -f svg[rotatey=15:rotatex=5:polygon] > $@
-iceR.svg: genice_svg/formats/svg.py Makefile
-	genice iceR -f svg[rotatex=-35:rotatey=45:shadow] > $@
-CS2.png: genice_svg/formats/png.py Makefile
-	genice CS2 -f png[rotatey=15:rotatex=5:shadow] > $@
-4R.png: genice_svg/formats/png.py Makefile
-	genice 4R -f png[shadow:rotatex=2:rotatey=88] > 4R.png
+iceT2.svg: $(BASE)/formats/svg.py Makefile
+	( cd $(BASE) && $(GENICE) iceT2 -f svg[shadow] ) > $@
+CS2.svg: $(BASE)/formats/svg.py Makefile
+	( cd $(BASE) && $(GENICE) CS2 -f svg[rotatey=15:rotatex=5:polygon] ) > $@
+iceR.svg: $(BASE)/formats/svg.py Makefile
+	( cd $(BASE) && $(GENICE) iceR -f svg[rotatex=-35:rotatey=45:shadow] ) > $@
+CS2.png: $(BASE)/formats/png.py Makefile
+	( cd $(BASE) && $(GENICE) CS2 -f png[rotatey=15:rotatex=5:shadow] ) > $@
+4R.png: $(BASE)/formats/png.py Makefile
+	( cd $(BASE) && $(GENICE) 4R -f png[shadow:rotatex=2:rotatey=88] ) > 4R.png
 %.test:
 	make $*
 	diff $* ref/$*
+
+
+%: temp_% replacer.py $(wildcard $(BASE)/lattices/*.py) $(wildcard $(BASE)/*.py)
+	pip install genice2_dev svgwrite
+	python replacer.py < $< > $@
+
+
+
 
 
 test-deploy: build
 	twine upload -r pypitest dist/*
 test-install:
 	pip install pillow
-	pip install --index-url https://test.pypi.org/simple/ genice_svg
+	pip install --index-url https://test.pypi.org/simple/ $(PACKAGE)
 
 
 
 install:
-	./setup.py install
+	python ./setup.py install
 uninstall:
-	-pip uninstall -y genice-svg
-build: README.md $(wildcard genice_svg/formats*.py)
-	./setup.py sdist bdist_wheel
+	-pip uninstall -y $(PACKAGE)
+build: README.md $(wildcard $(BASE)/lattices/*.py) $(wildcard $(BASE)/*.py)
+	python ./setup.py sdist bdist_wheel
 
 
 deploy: build

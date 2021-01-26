@@ -1,32 +1,37 @@
 <img src="4R.png">
 
-    genice 4R -f png[shadow:rotatex=2:rotatey=88] > 4R.png
+    genice2 4R -f png[shadow:rotatex=2:rotatey=88] > 4R.png
 
 
-# [genice-svg]({{url}})
+# [{{package}}]({{url}})
 
-A [GenIce](https://github.com/vitroid/GenIce) plugin to illustrate the structure in SVG (and PNG) format.
+A {{genice}} plugin to illustrate the structure in SVG (and PNG) format.
 
 version {{version}}
 
 ## Requirements
+
 {% for i in requires %}
 * {{i}}
 {%- endfor %}
 
 ## Installation from PyPI
 
-    % pip install {{package}}
+```shell
+% pip install {{package}}
+```
 
 ## Manual Installation
 
 ### System-wide installation
 
-    % make install
+```shell
+% make install
+```
 
 ### Private installation
 
-Copy the files in genice_svg/formats/ into your local formats/ folder.
+Copy the files in {{base}}/formats/ into your local formats/ folder.
 
 ## Usage
 
@@ -42,4 +47,6 @@ Png is a quick alternative for svg. Use png if making svg is too slow.
 
 ## Test in place
 
-    % make test
+```shell
+% make test
+```

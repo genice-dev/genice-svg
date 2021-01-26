@@ -34,8 +34,10 @@ from logging import getLogger
 from collections import defaultdict
 
 import numpy as np
+import networkx as nx
+from cycless.cycles import cycles_iter
 
-from genice_svg.render_svg import Render
+from genice2_svg.render_svg import Render
 import genice2.formats
 from genice2.decorators import timeit, banner
 
@@ -239,7 +241,9 @@ class Format(genice2.formats.Format):
         RHB  = self.oxygen*self.HB # nm
         xmin, xmax, ymin, ymax = draw_cell(prims, projected)
         if self.poly:
-            for ring in cr.CountRings(nx.Graph(lattice.graph), pos=lattice.reppositions).rings_iter(8):
+            for ring in cycles_iter(nx.Graph(lattice.graph),
+                                   8,
+                                   pos=lattice.reppositions):
                 nedges = len(ring)
                 deltas = np.zeros((nedges,3))
                 d2 = np.zeros(3)
