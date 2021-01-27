@@ -7,7 +7,7 @@
 
 A [GenIce2](https://github.com/vitroid/GenIce) plugin to illustrate the structure in SVG (and PNG) format.
 
-version 0.8
+version 2.0
 
 ## Requirements
 
@@ -15,8 +15,7 @@ version 0.8
 * svgwrite
 * genice2
 * pillow
-* countrings>=0.1.7
-* jinja2
+* cycless
 
 ## Installation from PyPI
 
