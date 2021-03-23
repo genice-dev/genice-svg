@@ -40,6 +40,7 @@ from cycless.cycles import cycles_iter
 from genice2_svg.render_svg import Render
 import genice2.formats
 from genice2.decorators import timeit, banner
+from genice2.molecules  import serialize
 
 
 def Normal(vs):
@@ -379,7 +380,11 @@ class Format(genice2.formats.Format):
             for i,v in enumerate(pos):
                 prims.append([np.dot(v, projected),"C",RO, {}]) #circle
         else:
-            for atom in lattice.atoms:
+            atoms = []
+            for mols in ice.universe:
+                atoms += serialize(mols)
+
+            for atom in atoms:
                 resno, resname, atomname, position, order = atom
                 if "O" in atomname:
                     waters[order]["O"] = position

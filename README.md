@@ -7,13 +7,13 @@
 
 A [GenIce2](https://github.com/vitroid/GenIce) plugin to illustrate the structure in SVG (and PNG) format.
 
-version 2.0
+version 2.1
 
 ## Requirements
 
 
 * svgwrite
-* genice2
+* genice2>=2.1b0
 * pillow
 * cycless
 
