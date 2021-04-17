@@ -381,7 +381,7 @@ class Format(genice2.formats.Format):
                 prims.append([np.dot(v, projected),"C",RO, {}]) #circle
         else:
             atoms = []
-            for mols in ice.universe:
+            for mols in lattice.universe:
                 atoms += serialize(mols)
 
             for atom in atoms:
