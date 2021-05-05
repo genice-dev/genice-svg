@@ -20,20 +20,18 @@ Options:
 """
 
 
-desc = { "ref": {},
-         "brief": "PNG (Portable Network Graphics).",
-         "usage": __doc__,
-         }
-
-
-import re
-from math import sin, cos, pi
-import numpy as np
-from logging import getLogger
-
-from genice2_svg.render_png import Render
-
 import genice2_svg.formats.svg
+from genice2_svg.render_png import Render
+from logging import getLogger
+import numpy as np
+from math import sin, cos, pi
+import re
+desc = {"ref": {},
+        "brief": "PNG (Portable Network Graphics).",
+        "usage": __doc__,
+        }
+
+
 class Format(genice2_svg.formats.svg.Format):
     """
     Format an ice structure into a PNG file.
@@ -52,9 +50,10 @@ class Format(genice2_svg.formats.svg.Format):
         height=0       (Pixel)
         encode=True    Encode into PNG or return as a bitmap.
     """
+
     def __init__(self, **kwargs):
         logger = getLogger()
         super().__init__(**kwargs)
-        self.poly     = False # unavailable for PNG
-        self.arrows   = False # always false for png
-        self.renderer = Render # png renderer
+        self.poly = False  # unavailable for PNG
+        self.arrows = False  # always false for png
+        self.renderer = Render  # png renderer

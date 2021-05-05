@@ -5,6 +5,8 @@ PACKAGE=genice2-svg
 
 all: README.md
 
+pep8:
+		autopep8 -r -a -a -i genice2_svg/
 
 test: iceT2.svg.test CS2.svg iceR.svg CS2.png 4R.png
 iceT2.svg: $(BASE)/formats/svg.py Makefile
