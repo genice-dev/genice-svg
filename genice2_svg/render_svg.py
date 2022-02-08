@@ -83,7 +83,7 @@ def cylinder_new(svg, v1_, v2_, r, **options):
     group.add(u)
 
 
-def Render(prims, Rsphere, shadow=None, zoom=200, topleft=np.array(
+def Render(prims, Rsphere, shadow=None, zoom=100, topleft=np.array(
         [-1., -1.]), size=(50., 50.), bgcolor=None, encode=False):
     # encode is dummy parameter.
     logger = getLogger()

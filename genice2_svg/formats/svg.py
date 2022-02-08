@@ -279,7 +279,7 @@ class Format(genice2.formats.Format):
                 prims.append([np.dot(v, projected), "C", RO, {}])  # circle
         xsize = xmax - xmin
         ysize = ymax - ymin
-        zoom = 200
+        zoom = 100
         if self.width > 0:
             zoom = self.width / xsize
             if self.height > 0:
