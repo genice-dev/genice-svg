@@ -30,7 +30,7 @@ import networkx as nx
 import numpy as np
 from collections import defaultdict
 from logging import getLogger
-from math import pi, cos, sin
+from math import pi, cos, sin, radians
 import re
 desc = {"ref": {},
         "brief": "SVG (Standard Vector Graphics).",
@@ -84,21 +84,24 @@ def draw_cell(prims, cellmat, origin=np.zeros(3)):
             prims.append([np.dot(mid, cellmat),
                           "L",
                           np.dot(v0, cellmat),
-                          np.dot(v1, cellmat), 0, {}])
+                          np.dot(v1, cellmat), 0, {"stroke_width": 1,
+                                                   "stroke": "#888"}])
             v0 = np.array([b, 0., a] + origin)
             v1 = np.array([b, 1., a] + origin)
             mid = (v0 + v1) / 2
             prims.append([np.dot(mid, cellmat),
                           "L",
                           np.dot(v0, cellmat),
-                          np.dot(v1, cellmat), 0, {}])
+                          np.dot(v1, cellmat), 0, {"stroke_width": 1,
+                                                   "stroke": "#888"}])
             v0 = np.array([a, b, 0.] + origin)
             v1 = np.array([a, b, 1.] + origin)
             mid = (v0 + v1) / 2
             prims.append([np.dot(mid, cellmat),
                           "L",
                           np.dot(v0, cellmat),
-                          np.dot(v1, cellmat), 0, {}])
+                          np.dot(v1, cellmat), 0, {"stroke_width": 1,
+                                                   "stroke": "#888"}])
     corners = []
     for x in (np.zeros(3), cellmat[0]):
         for y in (np.zeros(3), cellmat[1]):
@@ -117,6 +120,7 @@ class Format(genice2.formats.Format):
         rotatex=30
         rotatey=30
         rotatez=30
+        rotate=X30,Y12,X12
         polygon=True   Draw polygons instead of a ball and stick model.
         arrows=True    Draw the hydrogen bonds with arrows.
         shadow="#8881" Draw shadows behind balls with the specified color.
@@ -137,6 +141,10 @@ class Format(genice2.formats.Format):
     @banner
     def __init__(self, **kwargs):
         "ArgParser (svg)."
+        #
+        # このparserだと、rotatexを二回指定できない。しかも、実行順序が安定しない。
+        # 
+        #
         logger = getLogger()
         self.renderer = Render
         self.encode = True  # valid for png.
@@ -160,23 +168,42 @@ class Format(genice2.formats.Format):
                 self.proj = np.array([float(x)
                                      for x in value.split(",")]).reshape(3, 3)
             elif key == "rotatex":
+                logger.warning("The rotatex option is deprecated. Use rotate option instead.")
                 value = float(value) * pi / 180
                 cosx = cos(value)
                 sinx = sin(value)
                 R = np.array([[1, 0, 0], [0, cosx, sinx], [0, -sinx, cosx]])
                 self.proj = np.dot(self.proj, R)
             elif key == "rotatey":
+                logger.warning("The rotatey option is deprecated. Use rotate option instead.")
                 value = float(value) * pi / 180
                 cosx = cos(value)
                 sinx = sin(value)
                 R = np.array([[cosx, 0, -sinx], [0, 1, 0], [sinx, 0, cosx]])
                 self.proj = np.dot(self.proj, R)
             elif key == "rotatez":
+                logger.warning("The rotatez option is deprecated. Use rotate option instead.")
                 value = float(value) * pi / 180
                 cosx = cos(value)
                 sinx = sin(value)
                 R = np.array([[cosx, sinx, 0], [-sinx, cosx, 0], [0, 0, 1]])
                 self.proj = np.dot(self.proj, R)
+            elif key == "rotate":
+                values = value.split(",")
+                for value in values:
+                    axis = value[0]
+                    angle  = radians(float(value[1:]))
+                    cosx = cos(angle)
+                    sinx = sin(angle)
+                    if axis in "xX":
+                        R = np.array([[1, 0, 0], [0, cosx, sinx], [0, -sinx, cosx]])
+                    elif axis in "yY":
+                        R = np.array([[cosx, 0, -sinx], [0, 1, 0], [sinx, 0, cosx]])
+                    elif axis in "zZ":
+                        R = np.array([[cosx, sinx, 0], [-sinx, cosx, 0], [0, 0, 1]])
+                    else:
+                        assert False, "  Wrong options."
+                    self.proj = np.dot(self.proj, R)
             elif key == "shadow":
                 if value is True:
                     self.shadow = "#8881"

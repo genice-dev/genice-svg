@@ -6,7 +6,8 @@ dist/
 build/
 *.egg-info/
 *.svg
-
+*.png
+*.gro
 
 README\.md\.1
 
