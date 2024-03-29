@@ -3,19 +3,20 @@
     genice2 4R -f png[shadow:rotatex=2:rotatey=88] > 4R.png
 
 
-# [genice2-svg](https://github.com/vitroid/genice-svg/)
+# [genice2-svg](https://github.com/vitroid/genice2-svg)
 
-A [GenIce2](https://github.com/vitroid/GenIce) plugin to illustrate the structure in SVG (and PNG) format.
+A  plugin to illustrate the structure in SVG (and PNG) format.
 
-version 2.1.2
+version 2.4-alpha.0
 
 ## Requirements
 
+* python^3.9
+* numpy^1.26.4
+* genice2>=2
+* svgwrite>=1.4.3
+* pillow*
 
-* svgwrite
-* genice2>=2.1b0
-* pillow
-* cycless
 
 ## Installation from PyPI
 
@@ -33,7 +34,7 @@ version 2.1.2
 
 ### Private installation
 
-Copy the files in genice2_svg/formats/ into your local formats/ folder.
+Copy the files in /formats/ into your local formats/ folder.
 
 ## Usage
         
@@ -54,6 +55,7 @@ Copy the files in genice2_svg/formats/ into your local formats/ folder.
         OH=0.5         Radius of OH colvalent bond relative to that of oxygem
         width=0        (Pixel)
         height=0       (Pixel)
+        margin=0       (Pixel)
 
 Png is a quick alternative for svg. Use png if making svg is too slow.
         

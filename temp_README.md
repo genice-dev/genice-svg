@@ -3,7 +3,7 @@
     genice2 4R -f png[shadow:rotatex=2:rotatey=88] > 4R.png
 
 
-# [{{package}}]({{url}})
+# [{{project.name}}]({{project.urls.Homepage}})
 
 A {{genice}} plugin to illustrate the structure in SVG (and PNG) format.
 
@@ -11,14 +11,13 @@ version {{version}}
 
 ## Requirements
 
-{% for i in requires %}
-* {{i}}
-{%- endfor %}
+{% for item in tool.poetry.dependencies %}* {{item}}{{tool.poetry.dependencies[item]}}
+{% endfor %}
 
 ## Installation from PyPI
 
 ```shell
-% pip install {{package}}
+% pip install {{project.name}}
 ```
 
 ## Manual Installation
