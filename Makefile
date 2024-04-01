@@ -1,7 +1,7 @@
 .DELETE_ON_ERROR:
 GENICE=genice2
 BASE=genice2_svg
-PACKAGE=genice2-svg
+PKGNAME=genice2-svg
 INKSCAPE=/Applications/Inkscape.app/Contents/MacOS/inkscape
 
 all: README.md
@@ -31,29 +31,20 @@ CS2.png: $(BASE)/formats/png.py Makefile
 	python replacer.py $< > $@
 
 
-
-
-
-test-deploy: build
-	twine upload -r pypitest dist/*
+test-deploy:
+	poetry publish --build -r testpypi
 test-install:
-	pip install pillow
-	pip install --index-url https://test.pypi.org/simple/ $(PACKAGE)
-
-
-
-install:
-	python ./setup.py install
+	pip install --index-url https://test.pypi.org/simple/ $(PKGNAME)
 uninstall:
-	-pip uninstall -y $(PACKAGE)
-build: README.md $(wildcard $(BASE)/lattices/*.py) $(wildcard $(BASE)/*.py)
-	python ./setup.py sdist bdist_wheel
-
-
-deploy: build
-	twine upload dist/*
+	-pip uninstall -y $(PKGNAME)
+build: README.md $(wildcard genice2_yaplot/*.py)
+	poetry build
+deploy:
+	poetry publish --build
 check:
-	./setup.py check
+	poetry check
+
+
 clean:
 	-rm $(ALL) *~ */*~ *svg CS2.png
 	-rm -rf build dist *.egg-info

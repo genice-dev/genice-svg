@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # even: stable; odd: develop
-__version__ = "2.4-alpha.0"
+__version__ = "2.4.1"
 
 # 2.4 with poetry
 # 2.3 for GenIce2.2

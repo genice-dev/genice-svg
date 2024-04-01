@@ -34,7 +34,7 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.9"
 numpy = "^1.26.4"
-genice2 = ">=2"
+genice2 = ">=2.2"
 svgwrite = ">=1.4.3"
 pillow = "*"
 

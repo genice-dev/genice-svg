@@ -7,13 +7,13 @@
 
 A  plugin to illustrate the structure in SVG (and PNG) format.
 
-version 2.4-alpha.0
+version 2.4.1
 
 ## Requirements
 
 * python^3.9
 * numpy^1.26.4
-* genice2>=2
+* genice2>=2.2
 * svgwrite>=1.4.3
 * pillow*
 
@@ -39,7 +39,7 @@ Copy the files in /formats/ into your local formats/ folder.
 ## Usage
         
     Usage:
-        % genice CS2 -r 3 3 3 -f svg[rotatex=30:shadow] > CS2.svg
+        % genice2 CS2 -r 3 3 3 -f svg[rotatex=30:shadow] > CS2.svg
 
     Options:
         rotatex=30
@@ -60,7 +60,7 @@ Copy the files in /formats/ into your local formats/ folder.
 Png is a quick alternative for svg. Use png if making svg is too slow.
         
     Usage:
-        % genice CS2 -r 3 3 3 -f png[shadow:bg=#f00] > CS2.png
+        % genice2 CS2 -r 3 3 3 -f png[shadow:bg=#f00] > CS2.png
 
     Options:
         rotatex=30
