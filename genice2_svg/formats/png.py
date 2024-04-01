@@ -3,7 +3,7 @@
 GenIce format plugin to generate a PNG file.
 
 Usage:
-    % genice CS2 -r 3 3 3 -f png[shadow:bg=#f00] > CS2.png
+    % genice2 CS2 -r 3 3 3 -f png[shadow:bg=#f00] > CS2.png
 
 Options:
     rotatex=30

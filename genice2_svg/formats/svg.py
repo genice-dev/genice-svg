@@ -3,7 +3,7 @@
 GenIce format plugin to generate a SVG file.
 
 Usage:
-    % genice CS2 -r 3 3 3 -f svg[rotatex=30:shadow] > CS2.svg
+    % genice2 CS2 -r 3 3 3 -f svg[rotatex=30:shadow] > CS2.svg
 
 Options:
     rotatex=30
