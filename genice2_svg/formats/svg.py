@@ -19,6 +19,7 @@ Options:
     OH=0.5         Radius of OH colvalent bond relative to that of oxygem
     width=0        (Pixel)
     height=0       (Pixel)
+    margin=0       (Pixel)
 """
 
 from genice2.molecules import serialize
@@ -32,10 +33,12 @@ from collections import defaultdict
 from logging import getLogger
 from math import pi, cos, sin, radians
 import re
-desc = {"ref": {},
-        "brief": "SVG (Standard Vector Graphics).",
-        "usage": __doc__,
-        }
+
+desc = {
+    "ref": {},
+    "brief": "SVG (Standard Vector Graphics).",
+    "usage": __doc__,
+}
 
 
 def Normal(vs):
@@ -48,22 +51,24 @@ def Normal(vs):
     return n
 
 
-sun = np.array([-1., -1., 2.])
+sun = np.array([-1.0, -1.0, 2.0])
 sun /= np.linalg.norm(sun)
 
 
 # set of hue and saturation
-hue_sat = {3: (60., 0.8),
-           4: (120, 0.8),  # yellow-green
-           5: (180, 0.5),  # skyblue
-           6: (240, 0.5),  # blue
-           7: (300, 0.8),
-           8: (350, 0.5)}  # red-purple
+hue_sat = {
+    3: (60.0, 0.8),
+    4: (120, 0.8),  # yellow-green
+    5: (180, 0.5),  # skyblue
+    6: (240, 0.5),  # blue
+    7: (300, 0.8),
+    8: (350, 0.5),
+}  # red-purple
 
 
 def clip_cyl(v1, r1, v2, r2, rb):
-    r1c = (r1**2 - rb**2)**0.5
-    r2c = (r2**2 - rb**2)**0.5
+    r1c = (r1**2 - rb**2) ** 0.5
+    r2c = (r2**2 - rb**2) ** 0.5
     dv = v2 - v1
     Lv = np.linalg.norm(dv)
     if Lv < r1 + r2:
@@ -76,40 +81,59 @@ def clip_cyl(v1, r1, v2, r2, rb):
 
 
 def draw_cell(prims, cellmat, origin=np.zeros(3)):
-    for a in (0., 1.):
-        for b in (0., 1.):
-            v0 = np.array([0., a, b] + origin)
-            v1 = np.array([1., a, b] + origin)
+    for a in (0.0, 1.0):
+        for b in (0.0, 1.0):
+            v0 = np.array([0.0, a, b] + origin)
+            v1 = np.array([1.0, a, b] + origin)
             mid = (v0 + v1) / 2
-            prims.append([np.dot(mid, cellmat),
-                          "L",
-                          np.dot(v0, cellmat),
-                          np.dot(v1, cellmat), 0, {"stroke_width": 1,
-                                                   "stroke": "#888"}])
-            v0 = np.array([b, 0., a] + origin)
-            v1 = np.array([b, 1., a] + origin)
+            prims.append(
+                [
+                    np.dot(mid, cellmat),
+                    "L",
+                    np.dot(v0, cellmat),
+                    np.dot(v1, cellmat),
+                    0,
+                    {"stroke_width": 1, "stroke": "#888"},
+                ]
+            )
+            v0 = np.array([b, 0.0, a] + origin)
+            v1 = np.array([b, 1.0, a] + origin)
             mid = (v0 + v1) / 2
-            prims.append([np.dot(mid, cellmat),
-                          "L",
-                          np.dot(v0, cellmat),
-                          np.dot(v1, cellmat), 0, {"stroke_width": 1,
-                                                   "stroke": "#888"}])
-            v0 = np.array([a, b, 0.] + origin)
-            v1 = np.array([a, b, 1.] + origin)
+            prims.append(
+                [
+                    np.dot(mid, cellmat),
+                    "L",
+                    np.dot(v0, cellmat),
+                    np.dot(v1, cellmat),
+                    0,
+                    {"stroke_width": 1, "stroke": "#888"},
+                ]
+            )
+            v0 = np.array([a, b, 0.0] + origin)
+            v1 = np.array([a, b, 1.0] + origin)
             mid = (v0 + v1) / 2
-            prims.append([np.dot(mid, cellmat),
-                          "L",
-                          np.dot(v0, cellmat),
-                          np.dot(v1, cellmat), 0, {"stroke_width": 1,
-                                                   "stroke": "#888"}])
+            prims.append(
+                [
+                    np.dot(mid, cellmat),
+                    "L",
+                    np.dot(v0, cellmat),
+                    np.dot(v1, cellmat),
+                    0,
+                    {"stroke_width": 1, "stroke": "#888"},
+                ]
+            )
     corners = []
     for x in (np.zeros(3), cellmat[0]):
         for y in (np.zeros(3), cellmat[1]):
             for z in (np.zeros(3), cellmat[2]):
                 corners.append(x + y + z + origin)
     corners = np.array(corners)
-    return np.min(corners[:, 0]), np.max(corners[:, 0]), np.min(
-        corners[:, 1]), np.max(corners[:, 1])
+    return (
+        np.min(corners[:, 0]),
+        np.max(corners[:, 0]),
+        np.min(corners[:, 1]),
+        np.max(corners[:, 1]),
+    )
 
 
 class Format(genice2.formats.Format):
@@ -143,7 +167,7 @@ class Format(genice2.formats.Format):
         "ArgParser (svg)."
         #
         # このparserだと、rotatexを二回指定できない。しかも、実行順序が安定しない。
-        # 
+        #
         #
         logger = getLogger()
         self.renderer = Render
@@ -153,36 +177,41 @@ class Format(genice2.formats.Format):
         self.oxygen = 0.06  # absolute radius in nm
         self.HB = 0.4  # radius relative to the oxygen
         self.OH = 0.5  # radius relative to the oxygen
-        self.hydrogen = 0    # radius relative to the oxygen
+        self.hydrogen = 0  # radius relative to the oxygen
         self.arrows = False
         self.bgcolor = None
-        self.proj = np.array([[1., 0, 0], [0, 1, 0], [0, 0, 1]])
+        self.proj = np.array([[1.0, 0, 0], [0, 1, 0], [0, 0, 1]])
         self.width = 0
         self.height = 0
+        self.margin = 0  # margin around the cell cube
+        unprocessed = dict()
         for key, value in kwargs.items():
-            logger.info(
-                "  Option with arguments: {0} := {1}".format(
-                    key, value))
+            logger.info("  Option with arguments: {0} := {1}".format(key, value))
             if key == "rotmat":
                 value = re.search(r"\[([-0-9,.]+)\]", value).group(1)
-                self.proj = np.array([float(x)
-                                     for x in value.split(",")]).reshape(3, 3)
+                self.proj = np.array([float(x) for x in value.split(",")]).reshape(3, 3)
             elif key == "rotatex":
-                logger.warning("The rotatex option is deprecated. Use rotate option instead.")
+                logger.warning(
+                    "The rotatex option is deprecated. Use rotate option instead."
+                )
                 value = float(value) * pi / 180
                 cosx = cos(value)
                 sinx = sin(value)
                 R = np.array([[1, 0, 0], [0, cosx, sinx], [0, -sinx, cosx]])
                 self.proj = np.dot(self.proj, R)
             elif key == "rotatey":
-                logger.warning("The rotatey option is deprecated. Use rotate option instead.")
+                logger.warning(
+                    "The rotatey option is deprecated. Use rotate option instead."
+                )
                 value = float(value) * pi / 180
                 cosx = cos(value)
                 sinx = sin(value)
                 R = np.array([[cosx, 0, -sinx], [0, 1, 0], [sinx, 0, cosx]])
                 self.proj = np.dot(self.proj, R)
             elif key == "rotatez":
-                logger.warning("The rotatez option is deprecated. Use rotate option instead.")
+                logger.warning(
+                    "The rotatez option is deprecated. Use rotate option instead."
+                )
                 value = float(value) * pi / 180
                 cosx = cos(value)
                 sinx = sin(value)
@@ -192,7 +221,7 @@ class Format(genice2.formats.Format):
                 values = value.split(",")
                 for value in values:
                     axis = value[0]
-                    angle  = radians(float(value[1:]))
+                    angle = radians(float(value[1:]))
                     cosx = cos(angle)
                     sinx = sin(angle)
                     if axis in "xX":
@@ -230,6 +259,8 @@ class Format(genice2.formats.Format):
                 self.width = int(value)
             elif key == "height":
                 self.height = int(value)
+            elif key == "margin":
+                self.margin = int(value)
             elif key == "encode":
                 self.encode = bool(value)
             elif value is True:
@@ -242,7 +273,12 @@ class Format(genice2.formats.Format):
                 else:
                     assert False, "  Wrong options."
             else:
-                assert False, "  Wrong options."
+                unprocessed[key] = value
+            self.width -= self.margin * 2
+            self.height -= self.margin * 2
+        kwargs.clear()
+        kwargs |= unprocessed
+        logger.info(kwargs)
 
     @timeit
     @banner
@@ -266,9 +302,9 @@ class Format(genice2.formats.Format):
         RHB = self.oxygen * self.HB  # nm
         xmin, xmax, ymin, ymax = draw_cell(prims, projected)
         if self.poly:
-            for ring in cycles_iter(nx.Graph(lattice.graph),
-                                    8,
-                                    pos=lattice.reppositions):
+            for ring in cycles_iter(
+                nx.Graph(lattice.graph), 8, pos=lattice.reppositions
+            ):
                 nedges = len(ring)
                 deltas = np.zeros((nedges, 3))
                 d2 = np.zeros(3)
@@ -283,27 +319,37 @@ class Format(genice2.formats.Format):
                 # rel to abs
                 com = np.dot(com, projected)
                 deltas = np.dot(deltas, projected)
-                prims.append(
-                    [com, "P", deltas, {"fillhs": hue_sat[nedges]}])  # line
+                prims.append([com, "P", deltas, {"fillhs": hue_sat[nedges]}])  # line
         else:
             for i, j in lattice.graph.edges():
                 vi = pos[i]
                 d = pos[j] - pos[i]
                 d -= np.floor(d + 0.5)
-                clipped = clip_cyl(
-                    vi @ projected, RO, (vi + d) @ projected, RO, RHB)
+                clipped = clip_cyl(vi @ projected, RO, (vi + d) @ projected, RO, RHB)
                 if clipped is not None:
                     prims.append(clipped + [RHB, {"fill": "#fff"}])  # line
+                # If the bond intersects the cell boundary,
                 if np.linalg.norm(vi + d - pos[j]) > 0.01:
                     vj = pos[j]
                     d = pos[i] - pos[j]
                     d -= np.floor(d + 0.5)
                     clipped = clip_cyl(
-                        vj @ projected, RO, (vj + d) @ projected, RO, RHB)
+                        vj @ projected, RO, (vj + d) @ projected, RO, RHB
+                    )
                     if clipped is not None:
                         prims.append(clipped + [RHB, {"fill": "#fff"}])  # line
             for i, v in enumerate(pos):
-                prims.append([np.dot(v, projected), "C", RO, {}])  # circle
+                p = v @ projected
+                prims.append([p, "C", RO, {}])  # circle
+                # if the atom is on the boundary,
+                for j in range(3):
+                    if p[j] == 0:
+                        logger.info(f"On the boundary {j}")
+                        q = v.copy()
+                        q[j] = 1.0
+                        p = q @ projected
+                        prims.append([p, "C", RO, {}])  # circle
+        # size of the object
         xsize = xmax - xmin
         ysize = ymax - ymin
         zoom = 100
@@ -322,18 +368,19 @@ class Format(genice2.formats.Format):
                     ymin, ymax = ycenter - ysize / 2, ycenter + ysize / 2
         elif self.height > 0:
             zoom = self.height / ysize
-        logger.debug(
-            "Zoom {0} {1}x{2}".format(
-                zoom,
-                zoom * xsize,
-                zoom * ysize))
-        self.output = self.renderer(prims, RO,
-                                    shadow=self.shadow,
-                                    topleft=np.array((xmin, ymin)),
-                                    size=(xsize, ysize),
-                                    zoom=zoom,
-                                    bgcolor=self.bgcolor,
-                                    encode=self.encode)
+        logger.debug("Zoom {0} {1}x{2}".format(zoom, zoom * xsize, zoom * ysize))
+        # margin in object scale
+        rmargin = self.margin / zoom
+        self.output = self.renderer(
+            prims,
+            RO,
+            shadow=self.shadow,
+            topleft=np.array((xmin - rmargin, ymin - rmargin)),
+            size=(xsize + rmargin * 2, ysize + rmargin * 2),
+            zoom=zoom,
+            bgcolor=self.bgcolor,
+            encode=self.encode,
+        )
         if self.hydrogen == 0 and not self.arrows:
             logger.info("Abort the following stages.")
             return True  # abort the following stages
@@ -347,31 +394,36 @@ class Format(genice2.formats.Format):
             # draw everything in hook2
             return
 
-        filloxygen = {"stroke_width": 1,
-                      "stroke": "#444",
-                      "fill": "#f00",
-                      # "stroke_linejoin": "round",
-                      # "stroke_linecap" : "round",
-                      # "fill_opacity": 1.0,
-                      }
-        fillhydrogen = {"stroke_width": 1,
-                        "stroke": "#444",
-                        "fill": "#0ff",
-                        # "stroke_linejoin": "round",
-                        # "stroke_linecap" : "round",
-                        # "fill_opacity": 1.0,
-                        }
-        lineOH = {"stroke_width": 1,
-                  "stroke": "#444",
-                  "fill": "#fff",
-                  }
-        lineHB = {"stroke_width": 1,
-                  "stroke": "#444",
-                  "fill": "#ff0",
-                  }
-        arrow = {"stroke_width": 3,
-                 "stroke": "#fff",
-                 }
+        filloxygen = {
+            "stroke_width": 1,
+            "stroke": "#444",
+            "fill": "#f00",
+            # "stroke_linejoin": "round",
+            # "stroke_linecap" : "round",
+            # "fill_opacity": 1.0,
+        }
+        fillhydrogen = {
+            "stroke_width": 1,
+            "stroke": "#444",
+            "fill": "#0ff",
+            # "stroke_linejoin": "round",
+            # "stroke_linecap" : "round",
+            # "fill_opacity": 1.0,
+        }
+        lineOH = {
+            "stroke_width": 1,
+            "stroke": "#444",
+            "fill": "#fff",
+        }
+        lineHB = {
+            "stroke_width": 1,
+            "stroke": "#444",
+            "fill": "#ff0",
+        }
+        arrow = {
+            "stroke_width": 3,
+            "stroke": "#fff",
+        }
         offset = np.zeros(3)
 
         # Projection to the viewport
@@ -385,8 +437,8 @@ class Format(genice2.formats.Format):
         # pos = lattice.reppositions
         prims = []
         RO = self.oxygen  # nm
-        RHB = self.oxygen * self.HB       # nm
-        ROH = self.oxygen * self.OH       # nm
+        RHB = self.oxygen * self.HB  # nm
+        ROH = self.oxygen * self.OH  # nm
         RH = self.oxygen * self.hydrogen  # nm
         waters = defaultdict(dict)
         xmin, xmax, ymin, ymax = draw_cell(prims, projected)
@@ -397,11 +449,8 @@ class Format(genice2.formats.Format):
                 d = pos[j] - pos[i]
                 d -= np.floor(d + 0.5)
                 clipped = clip_cyl(
-                    vi @ projected,
-                    RO,
-                    (vi + d) @ projected,
-                    RO,
-                    0.0)  # line
+                    vi @ projected, RO, (vi + d) @ projected, RO, 0.0
+                )  # line
                 if clipped is not None:
                     prims.append(clipped + [0.0, {"stroke": "#fff"}])  # line
                 if np.linalg.norm(vi + d - pos[j]) > 0.01:
@@ -409,10 +458,10 @@ class Format(genice2.formats.Format):
                     d = pos[i] - pos[j]
                     d -= np.floor(d + 0.5)
                     clipped = clip_cyl(
-                        (vj + d) @ projected, RO, vj @ projected, RO, 0.0)
+                        (vj + d) @ projected, RO, vj @ projected, RO, 0.0
+                    )
                     if clipped is not None:
-                        prims.append(clipped +
-                                     [0.0, {"stroke": "#fff"}])  # line
+                        prims.append(clipped + [0.0, {"stroke": "#fff"}])  # line
             for i, v in enumerate(pos):
                 prims.append([np.dot(v, projected), "C", RO, {}])  # circle
         else:
@@ -435,7 +484,7 @@ class Format(genice2.formats.Format):
                 O = water["O"]
                 H0 = water["H0"]
                 H1 = water["H1"]
-                prims.append([O  @ self.proj, "C", RO, filloxygen])  # circle
+                prims.append([O @ self.proj, "C", RO, filloxygen])  # circle
                 prims.append([H0 @ self.proj, "C", RH, fillhydrogen])  # circle
                 prims.append([H1 @ self.proj, "C", RH, fillhydrogen])  # circle
                 # clipped cylinder
@@ -446,7 +495,7 @@ class Format(genice2.formats.Format):
                 if clipped is not None:
                     prims.append(clipped + [ROH, lineOH])
             # draw HBs
-            for i, j, d in lattice.spacegraph.edges(data=True):
+            for i, j in lattice.digraph.edges():
                 if i in waters and j in waters:  # edge may connect to the dopant
                     O = waters[j]["O"]
                     H0 = waters[i]["H0"]
@@ -456,24 +505,26 @@ class Format(genice2.formats.Format):
                     rr0 = d0 @ d0
                     rr1 = d1 @ d1
                     if rr0 < rr1 and rr0 < 0.245**2:
-                        clipped = clip_cyl(
-                            O @ self.proj, RO, H0 @ self.proj, RH, RHB)
+                        clipped = clip_cyl(O @ self.proj, RO, H0 @ self.proj, RH, RHB)
                         if clipped is not None:
                             prims.append(clipped + [RHB, lineHB])
                     elif rr1 < rr0 and rr1 < 0.245**2:
-                        clipped = clip_cyl(
-                            O @ self.proj, RO, H1 @ self.proj, RH, RHB)
+                        clipped = clip_cyl(O @ self.proj, RO, H1 @ self.proj, RH, RHB)
                         if clipped is not None:
                             prims.append(clipped + [RHB, lineHB])
-                    else:
-                        logger.debug(
-                            (np.linalg.norm(
-                                d['vector']), rr0, rr1, 0.245**2))
+                    # else:
+                    #     logger.debug(
+                    #         (np.linalg.norm(d["vector"]), rr0, rr1, 0.245**2)
+                    #     )
         xsize = xmax - xmin
         ysize = ymax - ymin
-        self.output = self.renderer(prims, RO,
-                                    shadow=self.shadow,
-                                    topleft=np.array((xmin, ymin)),
-                                    size=(xsize, ysize),
-                                    bgcolor=self.bgcolor,
-                                    encode=self.encode)
+        rmargin = self.margin / zoom
+        self.output = self.renderer(
+            prims,
+            RO,
+            shadow=self.shadow,
+            topleft=np.array((xmin - rmargin, ymin - rmargin)),
+            size=(xsize + rmargin * 2, ysize + rmargin * 2),
+            bgcolor=self.bgcolor,
+            encode=self.encode,
+        )

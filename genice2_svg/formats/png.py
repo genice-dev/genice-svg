@@ -26,10 +26,12 @@ from logging import getLogger
 import numpy as np
 from math import sin, cos, pi
 import re
-desc = {"ref": {},
-        "brief": "PNG (Portable Network Graphics).",
-        "usage": __doc__,
-        }
+
+desc = {
+    "ref": {},
+    "brief": "PNG (Portable Network Graphics).",
+    "usage": __doc__,
+}
 
 
 class Format(genice2_svg.formats.svg.Format):

@@ -28,7 +28,7 @@ CS2.png: $(BASE)/formats/png.py Makefile
 
 %: temp_% replacer.py $(wildcard $(BASE)/lattices/*.py) $(wildcard $(BASE)/*.py)
 	pip install genice2_dev svgwrite
-	python replacer.py < $< > $@
+	python replacer.py $< > $@
 
 
 

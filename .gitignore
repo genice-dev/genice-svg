@@ -5,10 +5,22 @@
 dist/
 build/
 *.egg-info/
-*.svg
 *.png
 *.gro
 
 README\.md\.1
 
 .ipynb_checkpoints/
+poetry.lock
+.vscode
+Figure/9.svg
+Figure/9h.svg
+Figure/9h2.svg
+Figure/9l.svg
+Figure/9l2.svg
+Figure/9l2B.svg
+Figure/9x.svg
+Figure/Makefile.tanaka
+formats/tanaka3.py
+formats/tanaka3h.py
+genice2_svg/theochem.svg
