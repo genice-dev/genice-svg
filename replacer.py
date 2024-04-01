@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from jinja2 import Template
+from jinja2 import Template, BaseLoader, Environment, FileSystemLoader
 import toml
 import genice2_svg
 
@@ -15,6 +15,6 @@ project |= {
     "version": genice2_svg.__version__,
 }
 
-t = Template(sys.stdin.read())
+t = Environment(loader=FileSystemLoader(searchpath=".")).get_template(sys.argv[1])
 markdown_en = t.render(**project)
 print(markdown_en)
