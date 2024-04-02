@@ -18,16 +18,15 @@ iceR.svg: $(BASENAME)/formats/svg.py Makefile
 	( cd $(BASENAME) && $(GENICE) iceR -f svg[rotate=X-35,Y45:shadow] ) > $@
 CS2.png: $(BASENAME)/formats/png.py Makefile
 	( cd $(BASENAME) && $(GENICE) CS2 -f png[rotate=Y15,X5:shadow] ) > $@
-4R.png: $(BASENAME)/formats/png.py Makefile
-	( cd $(BASENAME) && $(GENICE) 4R -f png[shadow:rotate=X2,Y88] ) > 4R.png
+4R.svg: $(BASENAME)/formats/svg.py Makefile
+	( cd $(BASENAME) && $(GENICE) 4R -f svg[shadow:rotate=X2,Y88] ) > $@
 %.test:
 	make $*
 	diff $* ref/$*
 %.svg.png: %.svg
 	$(INKSCAPE) -z $< -d 150 -b white -o $@
 
-%: temp_% replacer.py $(wildcard $(BASENAME)/lattices/*.py) $(wildcard $(BASENAME)/*.py)
-	pip install genice2_dev svgwrite
+%: temp_% replacer.py $(wildcard $(BASENAME)/formats/*.py) $(wildcard $(BASENAME)/*.py) pyproject.toml
 	python replacer.py $< > $@
 
 

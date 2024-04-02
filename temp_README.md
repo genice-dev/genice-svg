@@ -1,11 +1,15 @@
 {% include '4R.svg' %}
 
-    genice2 4R -f svg[shadow:rotatex=2:rotatey=88] > 4R.svg
+```shell
+genice2 4R -f svg[shadow:rotatex=2:rotatey=88] > 4R.svg
+```
+
+![Logo]({{tool.genice.urls.logo}})
 
 
 # [{{project.name}}]({{project.urls.Homepage}})
 
-A {{genice}} plugin to illustrate the structure in SVG (and PNG) format.
+A [GenIce2]({{tool.genice.urls.repository}}) plugin to illustrate the structure in SVG (and PNG) format.
 
 version {{version}}
 
